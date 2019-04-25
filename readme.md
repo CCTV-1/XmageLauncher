@@ -1,0 +1,4 @@
+# Dependency
+zlib
+gtkmm
+libcurl
