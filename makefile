@@ -29,4 +29,4 @@ networkutilities.o: src/networkutilities.cpp src/networkutilities.h
 src/launcher-resources.cpp: resources/resources.xml $(shell $(GLIB_COMPILE_RESOURCES) --generate-dependencies resources/resources.xml)
 	$(GLIB_COMPILE_RESOURCES) --generate-source resources/resources.xml --target=src/launcher-resources.cpp
 clean:
-	-rm launcher src/launcher-resources.cpp
+	-rm launcher src/launcher-resources.cpp fileutilities.o networkutilities.o
