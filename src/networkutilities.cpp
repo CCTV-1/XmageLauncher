@@ -1,12 +1,33 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <functional>
 #include <memory>
 
-#include <curl/curl.h>
 #include <jansson.h>
 
 #include "networkutilities.h"
+
+typedef struct JsonBuff
+{
+    char * buff;
+    std::size_t current_size;
+}json_buff_t;
+
+static Glib::ustring _proxy_desc;
+
+static void common_curl_opt_set( std::shared_ptr<CURL> curl_handle )
+{
+    constexpr char user_agent[] = "XmageLauncher";
+    curl_easy_setopt( curl_handle.get() , CURLOPT_USERAGENT , user_agent );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_VERBOSE , 0L );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_FOLLOWLOCATION , 1L );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_USE_SSL , 1L );
+    if ( _proxy_desc.empty() == false )
+    {
+        curl_easy_setopt( curl_handle.get() , CURLOPT_PROXY , _proxy_desc.c_str() );
+    }
+}
 
 static std::size_t get_json_callback( char * content , std::size_t size , std::size_t element_number , void * save_ptr )
 {
@@ -20,23 +41,10 @@ static std::size_t get_json_callback( char * content , std::size_t size , std::s
     return realsize;
 }
 
-static client_desc_t get_last_version_callback( XmageType type ) noexcept( false )
+static client_desc_t get_last_release_version( void ) noexcept( false )
 {
     std::string except_message( __func__ );
-    constexpr char user_agent[] = "XmageLauncher";
-    Glib::ustring api_url;
-    switch( type )
-    {
-        case XmageType::Beta:
-        {
-            break;
-        }
-        default:
-        case XmageType::Release:
-        {
-            api_url = "https://api.github.com/repos/magefree/mage/releases/latest";
-        }
-    }
+    Glib::ustring api_url = "https://api.github.com/repos/magefree/mage/releases/latest";
 
     std::int8_t re_try = 4;
     long default_timeout = 30L;
@@ -54,11 +62,8 @@ static client_desc_t get_last_version_callback( XmageType type ) noexcept( false
     }
     do
     {
+        common_curl_opt_set( curl_handle );
         curl_easy_setopt( curl_handle.get() , CURLOPT_URL , api_url.c_str() );
-        curl_easy_setopt( curl_handle.get() , CURLOPT_USERAGENT , user_agent );
-        curl_easy_setopt( curl_handle.get() , CURLOPT_VERBOSE , 0L );
-        curl_easy_setopt( curl_handle.get() , CURLOPT_FOLLOWLOCATION , 1L );
-        curl_easy_setopt( curl_handle.get() , CURLOPT_USE_SSL , 1L );
         curl_easy_setopt( curl_handle.get() , CURLOPT_NOPROGRESS , 1L );
         curl_easy_setopt( curl_handle.get() , CURLOPT_TIMEOUT , default_timeout );
         curl_easy_setopt( curl_handle.get() , CURLOPT_WRITEFUNCTION , get_json_callback );
@@ -173,14 +178,88 @@ static client_desc_t get_last_version_callback( XmageType type ) noexcept( false
     return last_version;
 }
 
+[[deprecated("unimplement")]]
+static client_desc_t get_last_beta_version( void ) noexcept( true )
+{
+    return {};
+}
+
+[[deprecated("unimplement")]]
 static void download_client_callback( client_desc_t desc )
 {
     ;
 }
 
+bool network_utilities_initial( void )
+{
+    CURLcode init_status = curl_global_init( CURL_GLOBAL_ALL );
+    return ( init_status == 0 );
+}
+
+bool set_proxy( curl_proxytype scheme , Glib::ustring hostname , std::uint32_t port )
+{
+    Glib::ustring proxy_desc;
+
+    switch ( scheme )
+    {
+        case curl_proxytype::CURLPROXY_HTTP:
+        case curl_proxytype::CURLPROXY_HTTP_1_0:
+        {
+            proxy_desc += "http://";
+            break;
+        }
+        case curl_proxytype::CURLPROXY_HTTPS:
+        {
+            proxy_desc += "https://";
+            break;
+        }
+        case CURLPROXY_SOCKS4:
+        {
+            proxy_desc += "socks4://";
+            break;            
+        }
+        case CURLPROXY_SOCKS4A:
+        {
+            proxy_desc += "socks4a://";
+            break;            
+        }
+        case CURLPROXY_SOCKS5:
+        {
+            proxy_desc += "socks5://";
+            break;
+        }
+        case CURLPROXY_SOCKS5_HOSTNAME:
+        {
+            proxy_desc += "socks5h://";
+            break;
+        }
+        default:
+            return false;
+    }
+
+    if ( hostname.empty() )
+        return false;
+    proxy_desc += hostname;
+
+    if ( port >= 65535 )
+        return false;
+    
+    proxy_desc += ":";
+    proxy_desc += std::to_string( port );
+
+    _proxy_desc = std::move( proxy_desc );
+    return true;
+}
+
 std::shared_future<client_desc_t> get_last_version( XmageType type )
 {
-    std::packaged_task<client_desc_t()> task( std::bind( get_last_version_callback , type ) );
+    std::function<client_desc_t()> get_version_func;
+    if ( type == XmageType::Release )
+        get_version_func = std::bind( get_last_release_version );
+    else
+        get_version_func = std::bind( get_last_beta_version );
+
+    std::packaged_task<client_desc_t()> task( get_version_func );
     std::shared_future<client_desc_t> version_future = task.get_future();
     std::thread( std::move(task) ).detach();
 

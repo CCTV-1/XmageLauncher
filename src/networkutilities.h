@@ -6,15 +6,10 @@
 
 #include <future>
 
+#include <curl/curl.h>
 #include <glibmm.h>
 
 #include "commontype.h"
-
-typedef struct JsonBuff
-{
-    char * buff;
-    std::size_t current_size;
-}json_buff_t;
 
 typedef struct ClientDescription
 {
@@ -23,6 +18,13 @@ typedef struct ClientDescription
     std::size_t size;
     Glib::ustring download_url;
 }client_desc_t;
+
+//non-thread safe
+bool network_utilities_initial( void );
+
+//non-thread safe,existing network utilities thread not affected
+//argument hostname: host name or dotted numerical IP address. A numerical IPv6 address must be written within [brackets].
+bool set_proxy( curl_proxytype scheme , Glib::ustring hostname , std::uint32_t port );
 
 std::shared_future<client_desc_t> get_last_version( XmageType type );
 

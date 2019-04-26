@@ -31,7 +31,11 @@ bool launch_server( XmageType )
 
 void launcher_initial( void )
 {
-    curl_global_init( CURL_GLOBAL_ALL );
+    if ( network_utilities_initial() )
+    {
+        //G_LOG_LEVEL_ERROR call exit* function
+        g_log( __func__ , G_LOG_LEVEL_ERROR , "network model initial fault" );
+    }
     json_set_alloc_funcs( malloc , free );
     #ifdef _WIN32
     //JRE don't care Win64/32
