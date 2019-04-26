@@ -19,6 +19,12 @@ typedef struct ClientDescription
     Glib::ustring download_url;
 }client_desc_t;
 
+typedef struct DownloadDescription
+{
+    curl_off_t total;
+    curl_off_t now;
+}download_desc_t;
+
 //non-thread safe
 bool network_utilities_initial( void );
 
@@ -28,6 +34,6 @@ bool set_proxy( curl_proxytype scheme , Glib::ustring hostname , std::uint32_t p
 
 std::shared_future<client_desc_t> get_last_version( XmageType type );
 
-std::shared_future<void> download_client( client_desc_t desc );
+std::shared_future<bool> download_client( client_desc_t desc , download_desc_t * download_now = nullptr );
 
 #endif

@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
@@ -27,6 +28,17 @@ static void common_curl_opt_set( std::shared_ptr<CURL> curl_handle )
     {
         curl_easy_setopt( curl_handle.get() , CURLOPT_PROXY , _proxy_desc.c_str() );
     }
+}
+
+static int download_description_callback( void * client_ptr , curl_off_t dltotal , curl_off_t dlnow , curl_off_t , curl_off_t )
+{
+    if ( client_ptr == nullptr )
+        return 0;
+    
+    download_desc_t * desc = static_cast<download_desc_t *>( client_ptr );
+    desc->total = dltotal;
+    desc->now = dlnow;
+    return 0;
 }
 
 static std::size_t get_json_callback( char * content , std::size_t size , std::size_t element_number , void * save_ptr )
@@ -184,16 +196,46 @@ static client_desc_t get_last_beta_version( void ) noexcept( true )
     return {};
 }
 
-[[deprecated("unimplement")]]
-static void download_client_callback( client_desc_t desc )
+static bool download_client_callback( client_desc_t client_desc , download_desc_t * download_desc )
 {
-    ;
+    std::shared_ptr<CURL> curl_handle( curl_easy_init() , curl_easy_cleanup );
+
+    Glib::ustring temp_name = client_desc.version_name + ".zip";
+    std::shared_ptr<FILE> download_file( fopen( temp_name.c_str() , "wb+" ) , fclose );
+    if ( download_file.get() == nullptr )
+    {
+        g_log( __func__ , G_LOG_LEVEL_WARNING , "open file:\'%s\' failure." , temp_name.c_str() );
+        return false;
+    }
+
+    long default_timeout = 60*60L;
+    char error_buff[CURL_ERROR_SIZE];
+    CURLcode res = CURLE_OK;
+
+    common_curl_opt_set( curl_handle );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_URL , client_desc.download_url.c_str() );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_TIMEOUT , default_timeout );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_NOPROGRESS , 0L );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_XFERINFOFUNCTION , download_description_callback );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_XFERINFODATA , download_desc );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_WRITEFUNCTION , fwrite );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_ERRORBUFFER , error_buff );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_WRITEDATA , download_file.get() );
+
+    res = curl_easy_perform( curl_handle.get() );
+    if ( res != CURLE_OK )
+    {
+        g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error type:\'%s\',error message:\'%s\'" , 
+                client_desc.download_url.c_str() , curl_easy_strerror( res ) , error_buff );
+        return false;
+    }
+
+    return true;
 }
 
 bool network_utilities_initial( void )
 {
-    CURLcode init_status = curl_global_init( CURL_GLOBAL_ALL );
-    return ( init_status == 0 );
+    return ( curl_global_init( CURL_GLOBAL_ALL ) == 0 );
 }
 
 bool set_proxy( curl_proxytype scheme , Glib::ustring hostname , std::uint32_t port )
@@ -266,11 +308,10 @@ std::shared_future<client_desc_t> get_last_version( XmageType type )
     return version_future;
 }
 
-[[deprecated("unimplement")]]
-std::shared_future<void> download_client( client_desc_t desc )
+std::shared_future<bool> download_client( client_desc_t client_desc , download_desc_t * download_desc )
 {
-    std::packaged_task<void()> task( std::bind( download_client_callback , desc ) );
-    std::shared_future<void> download_future = task.get_future();
+    std::packaged_task<bool()> task( std::bind( download_client_callback , client_desc , download_desc ) );
+    std::shared_future<bool> download_future = task.get_future();
     std::thread( std::move(task) ).detach();
 
     return download_future;

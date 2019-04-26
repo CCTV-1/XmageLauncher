@@ -31,9 +31,8 @@ bool launch_server( XmageType )
 
 void launcher_initial( void )
 {
-    if ( network_utilities_initial() )
+    if ( network_utilities_initial() == false )
     {
-        //G_LOG_LEVEL_ERROR call exit* function
         g_log( __func__ , G_LOG_LEVEL_ERROR , "network model initial fault" );
     }
     json_set_alloc_funcs( malloc , free );
@@ -42,7 +41,7 @@ void launcher_initial( void )
     //#ifdef _WIN64
     //#else
     //#endif
-        std::getenv("JAVA_HOME");
+        auto value = std::getenv("JAVA_HOME");
     #elif __APPLE__
         #include "TargetConditionals.h"
         #if TARGET_OS_MAC
@@ -71,22 +70,49 @@ int main ( int argc , char * argv[] )
 {
     launcher_initial();
 
+    set_proxy( curl_proxytype::CURLPROXY_HTTP , "localhost" , 1080 );
     auto desc = get_last_version( XmageType::Release );
-
+    download_desc_t download_desc = { 0 , 0 };
+    auto download_desc_ptr = &download_desc;
     auto app = Gtk::Application::create( argc , argv );
     auto builder = Gtk::Builder::create_from_resource( "/resources/Launcher.ui" );
 
     Gtk::Window * window = nullptr;
     builder->get_widget( "LauncherWindow" , window );
 
+    Gtk::Label download_info( "" );
+    window->add( download_info );
+    window->show_all();
+
     Glib::signal_timeout().connect(
-        [ window , desc ]()
+        [ window , desc , &download_info , download_desc_ptr ]()
         {
             std::future_status desc_status = desc.wait_for( std::chrono::microseconds( 20 ) );
             if ( desc_status == std::future_status::ready )
             {
                 client_desc_t client_desc = desc.get();
                 g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s,%s" , client_desc.version_name.c_str() , client_desc.download_url.c_str() );
+                auto download_status = download_client( client_desc , download_desc_ptr );
+                Glib::signal_timeout().connect(
+                    [ download_status , &download_info , download_desc_ptr ]()
+                    {
+                        std::future_status desc_status = download_status.wait_for( std::chrono::microseconds( 20 ) );
+                        download_info.set_label( std::to_string( download_desc_ptr->now ) + " / "  + std::to_string( download_desc_ptr->total ) );
+                        if ( desc_status == std::future_status::ready )
+                        {
+                            if ( download_status.get() )
+                            {
+                                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download success" );
+                            }
+                            else
+                            {
+                                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download failure" );
+                            }
+                            return false;
+                        }
+                        return true;
+                    } , 100
+                );
                 return false;
             }
             return true;
