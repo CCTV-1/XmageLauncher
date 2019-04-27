@@ -80,12 +80,12 @@ int main ( int argc , char * argv[] )
     Gtk::Window * window = nullptr;
     builder->get_widget( "LauncherWindow" , window );
 
-    Gtk::Label download_info( "" );
-    window->add( download_info );
+    Gtk::ProgressBar * download_info;
+    builder->get_widget( "Progress" , download_info );
     window->show_all();
 
     Glib::signal_timeout().connect(
-        [ window , desc , &download_info , download_desc_ptr ]()
+        [ window , desc , download_info , download_desc_ptr ]()
         {
             std::future_status desc_status = desc.wait_for( std::chrono::microseconds( 20 ) );
             if ( desc_status == std::future_status::ready )
@@ -94,10 +94,14 @@ int main ( int argc , char * argv[] )
                 g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s,%s" , client_desc.version_name.c_str() , client_desc.download_url.c_str() );
                 auto download_status = download_client( client_desc , download_desc_ptr );
                 Glib::signal_timeout().connect(
-                    [ download_status , &download_info , download_desc_ptr ]()
+                    [ download_status , download_info , download_desc_ptr ]()
                     {
                         std::future_status desc_status = download_status.wait_for( std::chrono::microseconds( 20 ) );
-                        download_info.set_label( std::to_string( download_desc_ptr->now ) + " / "  + std::to_string( download_desc_ptr->total ) );
+                        download_info->property_text().set_value( std::to_string( download_desc_ptr->now ) + " / "  + std::to_string( download_desc_ptr->total ) );
+                        if ( download_desc_ptr->total == 0 )
+                            download_info->set_fraction( 0 );
+                        else
+                            download_info->set_fraction( download_desc_ptr->now/static_cast<gdouble>( download_desc_ptr->total ) );
                         if ( desc_status == std::future_status::ready )
                         {
                             if ( download_status.get() )
