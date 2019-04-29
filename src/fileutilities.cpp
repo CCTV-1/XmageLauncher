@@ -22,25 +22,38 @@ static void unzip_client_callback( Glib::ustring client_zip_name , Glib::ustring
         std::filesystem::create_directories( unzip_dir );
     std::shared_ptr<zip_t> zip_ptr( zip_open( client_zip_name.c_str() , ZIP_RDONLY , nullptr ) , zip_close );
     zip_int64_t file_number = zip_get_num_entries( zip_ptr.get() , ZIP_FL_UNCHANGED );
-    char * data_buff = nullptr;
-    zip_uint64_t buff_size = 0;
+    zip_uint64_t buff_size = 1024 * 8 * sizeof( char );
+    std::shared_ptr<char> data_buff( static_cast<char *>( malloc( buff_size ) ) , free );
     for( zip_int64_t i = 0 ; i < file_number ; i++ )
     {
         struct zip_stat file_stat;
         zip_stat_init( &file_stat );
         zip_stat_index( zip_ptr.get() , i , ZIP_FL_ENC_GUESS , &file_stat );
-        fprintf( stdout , "unzip file :'%s' to:'%s/%s'\n" , file_stat.name , unzip_path.c_str() , file_stat.name );
         if ( file_stat.size > buff_size )
         {
             buff_size = file_stat.size;
             //discard old data
-            free( data_buff );
-            data_buff = static_cast<char *>( malloc( file_stat.size ) );
+            data_buff = std::shared_ptr<char>( static_cast<char *>( malloc( buff_size ) ) , free );
         }
         std::shared_ptr<zip_file_t> file_ptr( zip_fopen_index( zip_ptr.get() , i , ZIP_FL_COMPRESSED ) , zip_fclose );
-        zip_fread( file_ptr.get() , data_buff , file_stat.size );
-        std::ofstream unzip_file( unzip_path + std::string( "/" ) + file_stat.name , std::ios::binary );
-        unzip_file.write( data_buff , buff_size );
+        zip_fread( file_ptr.get() , data_buff.get() , file_stat.size );
+        std::filesystem::path target_path( unzip_path.raw() + std::string( "/" ) + file_stat.name );
+        try
+        {
+            Glib::file_set_contents( target_path.string() , data_buff.get() , file_stat.size );
+        }
+        catch ( const Glib::FileError& e )
+        {
+            if ( e.code() == Glib::FileError::Code::NO_SUCH_ENTITY )
+            {
+                std::filesystem::path parent_dir = target_path.parent_path();
+                std::filesystem::create_directories( parent_dir );
+            }
+            else
+            {
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "Glib::FileError code:%d" , e.code() );
+            }
+        }
     }
 }
 
