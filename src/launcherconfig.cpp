@@ -14,19 +14,19 @@ LauncherConfig::LauncherConfig()
         //config file don't exitst,fill default value
         //config.ini content like:
         //[Beta]
-        //version=1.4.35.dev_2019-04-24_20-55
+        //version=1.4.35.dev_2019-04-28_20-43
         //installed_path=betamage
         //[Release]
-        //version=1.4.35V1
+        //version=xmage_1.4.35V2
         //installed_path=releasemage
         //[Setting]
         //using_proxy=false
         //proxy_scheme=http
         //proxy_host=localhost
         //proxy_port=1080
-        this->config_file.set_string( "Beta" , "version" , "1.4.35.dev_2019-04-24_20-55" );
+        this->config_file.set_string( "Beta" , "version" , "1.4.35.dev_2019-04-28_20-43" );
         this->config_file.set_string( "Beta" , "installed_path" , "betamage" );
-        this->config_file.set_string( "Release" , "version" , "1.4.35V1" );
+        this->config_file.set_string( "Release" , "version" , "xmage_1.4.35V2" );
         this->config_file.set_string( "Release" , "installed_path" , "releasemage" );
         this->config_file.set_boolean( "Setting" , "using_proxy" , false );
         this->config_file.set_string( "Setting" , "proxy_scheme" , "http" );
