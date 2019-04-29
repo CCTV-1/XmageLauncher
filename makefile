@@ -20,8 +20,10 @@ ifdef DEBUG
 	FLAGS+=-O0 -g3 -pg -DDEBUG
 endif
 
-launcher: src/launcher.cpp src/launcher-resources.cpp fileutilities.o networkutilities.o
-	$(CC) src/launcher.cpp src/launcher-resources.cpp fileutilities.o networkutilities.o $(FLAGS) $(GTKMM_FLAGS) $(CURL_FLAGS) $(JANSSON_FLAGS) $(LIBZIP_FLAGS) -o launcher
+launcher: src/launcher.cpp src/launcher-resources.cpp launcherconfig.o fileutilities.o networkutilities.o
+	$(CC) src/launcher.cpp src/launcher-resources.cpp launcherconfig.o fileutilities.o networkutilities.o $(FLAGS) $(GTKMM_FLAGS) $(CURL_FLAGS) $(JANSSON_FLAGS) $(LIBZIP_FLAGS) -o launcher
+launcherconfig.o: src/launcherconfig.cpp src/launcherconfig.h
+	$(CC) src/launcherconfig.cpp $(FLAGS) $(GLIBMM_FLAGS) -c -o launcherconfig.o
 fileutilities.o: src/fileutilities.cpp src/fileutilities.h
 	$(CC) src/fileutilities.cpp $(FLAGS) $(GLIBMM_FLAGS) -c -o fileutilities.o
 networkutilities.o: src/networkutilities.cpp src/networkutilities.h
