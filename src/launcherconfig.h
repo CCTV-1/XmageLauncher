@@ -4,8 +4,6 @@
 
 #include <glibmm.h>
 
-constexpr const char * CONFIG_FILE_NAME = "config.ini";
-
 typedef class LauncherConfig
 {
 public:

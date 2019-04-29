@@ -1,5 +1,7 @@
 #include "launcherconfig.h"
 
+constexpr const char * CONFIG_FILE_NAME = "config.conf";
+
 LauncherConfig::LauncherConfig()
 {
     this->config_file = Glib::KeyFile();
