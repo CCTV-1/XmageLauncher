@@ -9,6 +9,7 @@
 #include "commontype.h"
 #include "networkutilities.h"
 #include "fileutilities.h"
+#include "launcherconfig.h"
 
 enum class OperatorSystemType:std::uint32_t
 {
@@ -17,48 +18,65 @@ enum class OperatorSystemType:std::uint32_t
     Macos,
 };
 
-bool launch_client( XmageType )
+bool launch_client( config_t& config , XmageType type )
 {
-    //"start javaw -Xms1024m -Xmx1024m -XX:MaxPermSize=384m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -jar .\lib\mage-client-1.4.35.jar"
+    //"java -Xms1024m -Xmx1024m -XX:MaxPermSize=384m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -jar .\lib\mage-client-1.4.35.jar"
+    Glib::ustring version;
+    if ( type == XmageType::Release )
+        version = config.get_release_version();
+    else
+        version = config.get_beta_version();
+
+    std::vector<Glib::ustring> argvs({
+        config.get_java_path() , "-Xms1024m" , "-Xmx1024m" , "-XX:MaxPermSize=384m" , "-XX:+UseConcMarkSweepGC" ,
+        "-XX:+CMSClassUnloadingEnabled" , "-jar" , "./lib/mage-client-" + version + ".jar"
+    });
+    Glib::ustring client_path;
+    if ( type == XmageType::Release )
+        client_path = config.get_release_client();
+    else
+        client_path = config.get_beta_client();
+    Glib::spawn_async_with_pipes( client_path , argvs );
     return true;
 }
 
-bool launch_server( XmageType )
+bool launch_server( config_t& config , XmageType type )
 {
     //"java -Xms256M -Xmx512M -XX:MaxPermSize=256m -Djava.security.policy=./config/security.policy -Djava.util.logging.config.file=./config/logging.config -Dlog4j.configuration=file:./config/log4j.properties -jar ./lib/mage-server-1.4.35.jar"
+    Glib::ustring version;
+    if ( type == XmageType::Release )
+        version = config.get_release_version();
+    else
+        version = config.get_beta_version();
+
+    std::vector<Glib::ustring> argvs({
+        config.get_java_path() , "-Xms1024m" , "-Xmx1024m" , "-XX:MaxPermSize=384m" , "-Djava.security.policy=./config/security.policy"
+        "-Djava.util.logging.config.file=./config/logging.config" , "-Dlog4j.configuration=file:./config/log4j.properties" , "-jar" , "./lib/mage-server-" + version + ".jar"
+    });
+    Glib::ustring server_path;
+    if ( type == XmageType::Release )
+        server_path = config.get_release_server();
+    else
+        server_path = config.get_beta_server();
+    Glib::spawn_async_with_pipes( server_path , argvs );
     return true;
 }
 
-void launcher_initial( void )
+//read/apply config
+auto& launcher_initial( void )
 {
+    json_set_alloc_funcs( malloc , free );
     if ( network_utilities_initial() == false )
     {
-        g_log( __func__ , G_LOG_LEVEL_ERROR , "network model initial fault" );
+        g_log( __func__ , G_LOG_LEVEL_ERROR , "network module initial fault" );
     }
-    json_set_alloc_funcs( malloc , free );
-    #ifdef _WIN32
-    //JRE don't care Win64/32
-    //#ifdef _WIN64
-    //#else
-    //#endif
-        auto value = std::getenv("JAVA_HOME");
-    #elif __APPLE__
-        #include "TargetConditionals.h"
-        #if TARGET_OS_MAC
-        //Xmage don't support the following architecture
-        //#elif TARGET_OS_IPHONE
-        //#elif TARGET_IPHONE_SIMULATOR
-        #else
-        #   error "unsupported architecture"
-        #endif
-    #elif __linux__
-        // linux
-    //Xmage don't support the following architecture
-    //#elif __unix__
-    //#elif defined(_POSIX_VERSION)
-    #else
-    #   error "unsupported architecture"
-    #endif
+
+    auto & config = config_t::get_config();
+    if ( config.get_using_proxy() )
+    {
+        set_proxy( config.get_proxy_scheme() , config.get_proxy_host() , config.get_proxy_port() );
+    }
+    return config;
 }
 
 void launcher_cleanup( void )
@@ -68,10 +86,10 @@ void launcher_cleanup( void )
 
 int main ( int argc , char * argv[] )
 {
-    launcher_initial();
+    auto& config = launcher_initial();
+    //launch_client( XmageType::Release );
 
-    set_proxy( curl_proxytype::CURLPROXY_HTTP , "localhost" , 1080 );
-    auto desc = get_last_version( XmageType::Release );
+    auto desc = get_last_version( XmageType::Beta );
     download_desc_t download_desc = { 0 , 0 };
     auto download_desc_ptr = &download_desc;
     auto app = Gtk::Application::create( argc , argv );
@@ -85,16 +103,26 @@ int main ( int argc , char * argv[] )
     window->show_all();
 
     Glib::signal_timeout().connect(
-        [ window , desc , download_info , download_desc_ptr ]()
+        [ window , desc , download_info , &config , download_desc_ptr ]()
         {
             std::future_status desc_status = desc.wait_for( std::chrono::microseconds( 20 ) );
             if ( desc_status == std::future_status::ready )
             {
                 client_desc_t client_desc = desc.get();
-                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s,%s" , client_desc.version_name.c_str() , client_desc.download_url.c_str() );
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "installed client version:%s" , config.get_beta_version().c_str() );
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "last client '%s',download url:'%s'" , client_desc.version_name.c_str() , client_desc.download_url.c_str() );
+                if ( client_desc.version_name.compare( config.get_beta_version() ) )
+                {
+                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , "exitst new beta client,now download." );
+                }
+                else
+                {
+                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , "not exitst new beta client." );
+                }
+
                 auto download_status = download_client( client_desc , download_desc_ptr );
                 Glib::signal_timeout().connect(
-                    [ download_status , download_info , download_desc_ptr ]()
+                    [ client_desc , download_status , download_info , download_desc_ptr , &config ]()
                     {
                         std::future_status desc_status = download_status.wait_for( std::chrono::microseconds( 20 ) );
                         download_info->property_text().set_value( std::to_string( download_desc_ptr->now ) + " / "  + std::to_string( download_desc_ptr->total ) );
@@ -106,7 +134,9 @@ int main ( int argc , char * argv[] )
                         {
                             if ( download_status.get() )
                             {
-                                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download success" );
+                                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download success,install..." );
+                                unzip_client( client_desc.version_name + ".zip" , config.get_beta_path() );
+                                config.set_beta_version( client_desc.version_name );
                             }
                             else
                             {

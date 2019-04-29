@@ -56,7 +56,42 @@ static std::size_t get_json_callback( char * content , std::size_t size , std::s
 static client_desc_t get_last_release_version( void ) noexcept( false )
 {
     std::string except_message( __func__ );
+    //http://xmage.de/xmage/config.json
+    //{
+    //"java" : {
+    //    "version": "1.8.0_201",
+    //    "old_location": "http://download.oracle.com/otn-pub/java/jdk/8u201-b09/42970487e3af4f5aa5bca3f542482c60/jre-8u201-",
+    //    "location": "http://xmage.today/java/jre-8u201-"
+    //},
+    //"XMage" : {
+    //    "version": "1.4.35V1 (2019-04-24)",
+    //    "location": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V1/xmage_1.4.35V1.zip",
+    //    "locations": ["http://xmage.de/files/xmage_1.4.35V1.zip"],
+    //    "torrent": "",
+    //    "images": "",
+    //    "Launcher" : {
+    //    "version": "0.3.8",
+    //    "location": "http://bit.ly/xmageLauncher038"
+    //    } 
+    //}
+    //}
     Glib::ustring api_url = "https://api.github.com/repos/magefree/mage/releases/latest";
+    //{
+    //    ... unimportant ...
+    //    "name": "xmage_1.4.35V0",
+    //    ... unimportant ...
+    //    "assets": [
+    //        {
+    //            ... unimportant ...
+    //            "size": 148844576,
+    //            ...  unimportant ...
+    //            "created_at": "2019-04-23T21:30:45Z",
+    //            "updated_at": "2019-04-23T21:34:32Z",
+    //            "browser_download_url": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V0/xmage_1.4.35V0.zip"
+    //        }
+    //    ],
+    //    ... unimportant ...
+    //}
 
     std::int8_t re_try = 4;
     long default_timeout = 30L;
@@ -86,7 +121,7 @@ static client_desc_t get_last_release_version( void ) noexcept( false )
         {
             if ( re_try == 0 )
             {
-                except_message += ":get last version failure,libcurl error message:";
+                except_message += ":get last release version failure,libcurl error message:";
                 except_message += error_buff;
                 throw std::runtime_error( except_message );
             }
@@ -100,31 +135,16 @@ static client_desc_t get_last_release_version( void ) noexcept( false )
     std::shared_ptr<json_t> root( json_loads( json_buff.buff , 0 , &error ) , json_decref );
     if ( root.get() == nullptr )
     {
-        except_message += "network json:'";
+        except_message += ":network json:'";
         except_message += json_buff.buff;
         except_message += "' format does not meet expectations";
         throw std::invalid_argument( except_message );
     }
-    /* {
-        ... unimportant ...
-        "name": "xmage_1.4.35V0",
-        ... unimportant ...
-        "assets": [
-            {
-                ... unimportant ...
-                "size": 148844576,
-                ...  unimportant ...
-                "created_at": "2019-04-23T21:30:45Z",
-                "updated_at": "2019-04-23T21:34:32Z",
-                "browser_download_url": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V0/xmage_1.4.35V0.zip"
-            }
-        ],
-        ... unimportant ...
-    } */
+
     json_t * version_name = json_object_get( root.get() , "name" );
     if ( json_is_string( version_name )  == false )
     {
-        except_message += "network json:'";
+        except_message += ":network json:'";
         except_message += json_buff.buff;
         except_message += "' node 'name' format does not meet expectations";
         throw std::invalid_argument( except_message );
@@ -133,7 +153,7 @@ static client_desc_t get_last_release_version( void ) noexcept( false )
     json_t * assets_array = json_object_get( root.get() , "assets" );
     if ( json_is_array( assets_array )  == false )
     {
-        except_message += "network json:'";
+        except_message += ":network json:'";
         except_message += json_buff.buff;
         except_message += "' node 'assets' format does not meet expectations";
         throw std::invalid_argument( except_message );
@@ -142,7 +162,7 @@ static client_desc_t get_last_release_version( void ) noexcept( false )
     json_t * last_assets = json_array_get( assets_array , 0 );
     if ( json_is_object( last_assets ) == false )
     {
-        except_message += "network json:'";
+        except_message += ":network json:'";
         std::shared_ptr<char> jsons( json_dumps( last_assets , JSON_INDENT( 4 ) ) , free );
         except_message += jsons.get();
         except_message += "' element 0 format does not meet expectations";
@@ -152,7 +172,7 @@ static client_desc_t get_last_release_version( void ) noexcept( false )
     json_t * created_time = json_object_get( last_assets , "created_at" );
     if ( json_is_string( created_time )  == false )
     {
-        except_message += "network json:'";
+        except_message += ":network json:'";
         std::shared_ptr<char> jsons( json_dumps( last_assets , JSON_INDENT( 4 ) ) , free );
         except_message += jsons.get();
         except_message += "' node 'created_at' format does not meet expectations";
@@ -162,7 +182,7 @@ static client_desc_t get_last_release_version( void ) noexcept( false )
     json_t * client_size = json_object_get( last_assets , "size" );
     if ( json_is_integer( client_size )  == false )
     {
-        except_message += "network json:'";
+        except_message += ":network json:'";
         std::shared_ptr<char> jsons( json_dumps( last_assets , JSON_INDENT( 4 ) ) , free );
         except_message += jsons.get();
         except_message += "' node 'size' format does not meet expectations";
@@ -172,28 +192,121 @@ static client_desc_t get_last_release_version( void ) noexcept( false )
     json_t * download_url = json_object_get( last_assets , "browser_download_url" );
     if ( json_is_string( download_url )  == false )
     {
-        except_message += "network json:'";
+        except_message += ":network json:'";
         std::shared_ptr<char> jsons( json_dumps( last_assets , JSON_INDENT( 4 ) ) , free );
         except_message += jsons.get();
         except_message += "' format does not meet expectations";
         throw std::invalid_argument( except_message );
     }
 
-    Glib::TimeVal time_val;
-    time_val.assign_from_iso8601( json_string_value( created_time ) );
-    client_desc_t last_version({
-        json_string_value( version_name ) , time_val,
-        static_cast<std::size_t>( json_integer_value( client_size ) ) , json_string_value( download_url )
-    });
-
     free( json_buff.buff );
-    return last_version;
+    return { json_string_value( version_name ) , json_string_value( download_url ) };
 }
 
-[[deprecated("unimplement")]]
-static client_desc_t get_last_beta_version( void ) noexcept( true )
+static client_desc_t get_last_beta_version( void ) noexcept( false )
 {
-    return {};
+    std::string except_message( __func__ );
+    Glib::ustring api_url = "http://xmage.today/config.json";
+
+    std::int8_t re_try = 4;
+    long default_timeout = 30L;
+    json_buff_t json_buff = { nullptr , 0 };
+    char error_buff[CURL_ERROR_SIZE];
+    //c str* safe
+    error_buff[0] = '\0';
+
+    CURLcode res = CURLE_OK;
+    std::shared_ptr<CURL> curl_handle( curl_easy_init() , curl_easy_cleanup );
+    if ( curl_handle.get() == nullptr )
+    {
+        except_message += ":libcurl easy initial failure";
+        throw std::runtime_error( except_message );
+    }
+    do
+    {
+        common_curl_opt_set( curl_handle );
+        curl_easy_setopt( curl_handle.get() , CURLOPT_URL , api_url.c_str() );
+        curl_easy_setopt( curl_handle.get() , CURLOPT_NOPROGRESS , 1L );
+        curl_easy_setopt( curl_handle.get() , CURLOPT_TIMEOUT , default_timeout );
+        curl_easy_setopt( curl_handle.get() , CURLOPT_WRITEFUNCTION , get_json_callback );
+        curl_easy_setopt( curl_handle.get() , CURLOPT_WRITEDATA , &json_buff );
+        curl_easy_setopt( curl_handle.get() , CURLOPT_ERRORBUFFER , error_buff );
+        res = curl_easy_perform( curl_handle.get() );
+        if ( res != CURLE_OK )
+        {
+            if ( re_try == 0 )
+            {
+                except_message += ":get last beta version failure,libcurl error message:";
+                except_message += error_buff;
+                throw std::runtime_error( except_message );
+            }
+            default_timeout += 10L;
+            re_try--;
+        }
+    }
+    while ( res != CURLE_OK );
+
+    //{
+    //    "java": {
+    //        "version": "1.8.0_201",
+    //        "location": "http://xmage.today/java/jre-8u201-"
+    //    },
+    //    "XMage": {
+    //        "version": "1.4.35.dev_2019-04-24_20-55",
+    //        "location": "http://xmage.today/files/mage-update_1.4.35.dev_2019-04-24_20-55.zip",
+    //        "locations": [],
+    //        "full": "http://xmage.today/files/mage-full_1.4.35.dev_2019-04-24_20-55.zip",
+    //        "torrent": "",
+    //        "images": "",
+    //        "Launcher": {
+    //            "version": "0.3.8",
+    //            "location": "http://bit.ly/xmageLauncher038"
+    //        }
+    //    }
+    //}
+
+    json_error_t error;
+    std::shared_ptr<json_t> root( json_loads( json_buff.buff , 0 , &error ) , json_decref );
+    if ( root.get() == nullptr )
+    {
+        except_message += ":network json:'";
+        except_message += json_buff.buff;
+        except_message += "' format does not meet expectations";
+        throw std::invalid_argument( except_message );
+    }
+
+    json_t * client_node = json_object_get( root.get() , "XMage" );
+    if ( json_is_object( client_node )  == false )
+    {
+        except_message += ":network json:'";
+        std::shared_ptr<char> jsons( json_dumps( client_node , JSON_INDENT( 4 ) ) , free );
+        except_message += jsons.get();
+        except_message += "' node 'XMage' format does not meet expectations";
+        throw std::invalid_argument( except_message );
+    }
+
+    json_t * version = json_object_get( client_node , "version" );
+    if ( json_is_string( version )  == false )
+    {
+        except_message += ":network json:'";
+        std::shared_ptr<char> jsons( json_dumps( client_node , JSON_INDENT( 4 ) ) , free );
+        except_message += jsons.get();
+        except_message += "' node 'version' format does not meet expectations";
+        throw std::invalid_argument( except_message );
+    }
+
+    json_t * download_url = json_object_get( client_node , "full" );
+    if ( json_is_string( download_url )  == false )
+    {
+        except_message += ":network json:'";
+        std::shared_ptr<char> jsons( json_dumps( client_node , JSON_INDENT( 4 ) ) , free );
+        except_message += jsons.get();
+        except_message += "' format does not meet expectations";
+        throw std::invalid_argument( except_message );
+    }
+
+    free( json_buff.buff );
+    return { json_string_value( version ) , json_string_value( download_url ) };
 }
 
 static bool download_client_callback( client_desc_t client_desc , download_desc_t * download_desc )
@@ -238,46 +351,24 @@ bool network_utilities_initial( void )
     return ( curl_global_init( CURL_GLOBAL_ALL ) == 0 );
 }
 
-bool set_proxy( curl_proxytype scheme , Glib::ustring hostname , std::uint32_t port )
+bool set_proxy( Glib::ustring scheme , Glib::ustring hostname , std::uint32_t port )
 {
     Glib::ustring proxy_desc;
 
-    switch ( scheme )
+    if (
+        scheme != "http"    &&
+        scheme != "https"   &&
+        scheme != "socks4"  &&
+        scheme != "socks4a" &&
+        scheme != "socks5"  &&
+        scheme != "socks5h"
+    )
     {
-        case curl_proxytype::CURLPROXY_HTTP:
-        case curl_proxytype::CURLPROXY_HTTP_1_0:
-        {
-            proxy_desc += "http://";
-            break;
-        }
-        case curl_proxytype::CURLPROXY_HTTPS:
-        {
-            proxy_desc += "https://";
-            break;
-        }
-        case CURLPROXY_SOCKS4:
-        {
-            proxy_desc += "socks4://";
-            break;            
-        }
-        case CURLPROXY_SOCKS4A:
-        {
-            proxy_desc += "socks4a://";
-            break;            
-        }
-        case CURLPROXY_SOCKS5:
-        {
-            proxy_desc += "socks5://";
-            break;
-        }
-        case CURLPROXY_SOCKS5_HOSTNAME:
-        {
-            proxy_desc += "socks5h://";
-            break;
-        }
-        default:
-            return false;
+        return false;
     }
+
+    proxy_desc += scheme;
+    proxy_desc += "://";
 
     if ( hostname.empty() )
         return false;

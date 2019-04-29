@@ -14,8 +14,6 @@
 typedef struct ClientDescription
 {
     Glib::ustring version_name;
-    Glib::TimeVal create_time;
-    std::size_t size;
     Glib::ustring download_url;
 }client_desc_t;
 
@@ -30,7 +28,8 @@ bool network_utilities_initial( void );
 
 //non-thread safe,existing network utilities thread not affected
 //argument hostname: host name or dotted numerical IP address. A numerical IPv6 address must be written within [brackets].
-bool set_proxy( curl_proxytype scheme , Glib::ustring hostname , std::uint32_t port );
+//scheme type see enum curl_proxytype
+bool set_proxy( Glib::ustring scheme , Glib::ustring hostname , std::uint32_t port );
 
 std::shared_future<client_desc_t> get_last_version( XmageType type );
 

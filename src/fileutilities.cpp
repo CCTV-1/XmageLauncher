@@ -52,9 +52,3 @@ std::shared_future<void> unzip_client( Glib::ustring client_zip_name , Glib::ust
 
     return unzip_future;
 }
-
-[[deprecated("unimplement")]]
-Glib::ustring get_local_version( XmageType )
-{
-    return "xmage_1.4.35V0";
-}

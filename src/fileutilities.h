@@ -10,6 +10,4 @@
 
 std::shared_future<void> unzip_client( Glib::ustring client_zip_name , Glib::ustring unzip_path );
 
-Glib::ustring get_local_version( XmageType );
-
 #endif
