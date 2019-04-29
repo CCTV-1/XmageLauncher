@@ -1,4 +1,5 @@
 #include <string>
+#include <filesystem>
 
 #include <unistd.h>
 
@@ -23,9 +24,9 @@ bool launch_client( config_t& config , XmageType type )
     //"java -Xms1024m -Xmx1024m -XX:MaxPermSize=384m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -jar .\lib\mage-client-1.4.35.jar"
     Glib::ustring version;
     if ( type == XmageType::Release )
-        version = config.get_release_version();
+        version = config.get_release_mage_version();
     else
-        version = config.get_beta_version();
+        version = config.get_beta_mage_version();
 
     std::vector<Glib::ustring> argvs({
         config.get_java_path() , "-Xms1024m" , "-Xmx1024m" , "-XX:MaxPermSize=384m" , "-XX:+UseConcMarkSweepGC" ,
@@ -45,9 +46,9 @@ bool launch_server( config_t& config , XmageType type )
     //"java -Xms256M -Xmx512M -XX:MaxPermSize=256m -Djava.security.policy=./config/security.policy -Djava.util.logging.config.file=./config/logging.config -Dlog4j.configuration=file:./config/log4j.properties -jar ./lib/mage-server-1.4.35.jar"
     Glib::ustring version;
     if ( type == XmageType::Release )
-        version = config.get_release_version();
+        version = config.get_release_mage_version();
     else
-        version = config.get_beta_version();
+        version = config.get_beta_mage_version();
 
     std::vector<Glib::ustring> argvs({
         config.get_java_path() , "-Xms1024m" , "-Xmx1024m" , "-XX:MaxPermSize=384m" , "-Djava.security.policy=./config/security.policy"
@@ -87,9 +88,8 @@ void launcher_cleanup( void )
 int main ( int argc , char * argv[] )
 {
     auto& config = launcher_initial();
-    //launch_client( XmageType::Release );
 
-    auto desc = get_last_version( XmageType::Beta );
+    auto desc = get_last_version( XmageType::Release );
     download_desc_t download_desc = { 0 , 0 };
     auto download_desc_ptr = &download_desc;
     auto app = Gtk::Application::create( argc , argv );
@@ -109,42 +109,70 @@ int main ( int argc , char * argv[] )
             if ( desc_status == std::future_status::ready )
             {
                 client_desc_t client_desc = desc.get();
-                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "installed client version:%s" , config.get_beta_version().c_str() );
-                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "last client '%s',download url:'%s'" , client_desc.version_name.c_str() , client_desc.download_url.c_str() );
-                if ( client_desc.version_name.compare( config.get_beta_version() ) )
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "installed xmage version:%s" , config.get_release_version().c_str() );
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "last xmage '%s',download url:'%s'" , client_desc.version_name.c_str() , client_desc.download_url.c_str() );
+                if ( client_desc.version_name.compare( config.get_release_version() ) )
                 {
-                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , "exitst new beta client,now download." );
+                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , "exitst new xmage,now download." );
                 }
                 else
                 {
-                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , "not exitst new beta client." );
+                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , "not exitst new xmage." );
+                    return false;
                 }
 
-                auto download_status = download_client( client_desc , download_desc_ptr );
+                std::shared_future<bool> download_status;
+                if ( std::filesystem::is_regular_file( client_desc.version_name.raw() + ".zip" ) == false )
+                {
+                    download_status = download_client( client_desc , download_desc_ptr );
+                }
                 Glib::signal_timeout().connect(
                     [ client_desc , download_status , download_info , download_desc_ptr , &config ]()
                     {
-                        std::future_status desc_status = download_status.wait_for( std::chrono::microseconds( 20 ) );
-                        download_info->property_text().set_value( std::to_string( download_desc_ptr->now ) + " / "  + std::to_string( download_desc_ptr->total ) );
-                        if ( download_desc_ptr->total == 0 )
-                            download_info->set_fraction( 0 );
-                        else
-                            download_info->set_fraction( download_desc_ptr->now/static_cast<gdouble>( download_desc_ptr->total ) );
-                        if ( desc_status == std::future_status::ready )
+                        //may continue download
+                        if ( download_status.valid() )
                         {
-                            if ( download_status.get() )
-                            {
-                                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download success,install..." );
-                                unzip_client( client_desc.version_name + ".zip" , config.get_beta_path() );
-                                config.set_beta_version( client_desc.version_name );
-                            }
+                            std::future_status desc_status = download_status.wait_for( std::chrono::microseconds( 20 ) );
+                            download_info->property_text().set_value( std::to_string( download_desc_ptr->now ) + " / "  + std::to_string( download_desc_ptr->total ) );
+                            if ( download_desc_ptr->total == 0 )
+                                download_info->set_fraction( 0 );
                             else
+                                download_info->set_fraction( download_desc_ptr->now/static_cast<gdouble>( download_desc_ptr->total ) );
+                            if ( desc_status == std::future_status::ready )
                             {
-                                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download failure" );
+                                if ( download_status.get() )
+                                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download success,install..." );
+                                else
+                                {
+                                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download failure" );
+                                    return false;
+                                }
                             }
-                            return false;
+                            
+                            return true;
                         }
-                        return true;
+                        else
+                        {
+                            g_log( __func__ , G_LOG_LEVEL_MESSAGE , "exitst new xmage zip,continue download,install..." );
+                        }
+
+                        auto unzip_future = unzip_client( client_desc.version_name + ".zip" ,  config.get_release_path() );
+                        Glib::signal_timeout().connect(
+                            [ client_desc , unzip_future , &config ]()
+                            {
+                                std::future_status unzip_status = unzip_future.wait_for( std::chrono::microseconds( 20 ) );
+                                if ( unzip_status == std::future_status::ready )
+                                {
+                                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "install success" );
+                                    config.set_release_version( client_desc.version_name );
+                                    launch_client( config , XmageType::Release );
+                                    return false;
+                                }
+                                return true;
+                            } , 100
+                        );
+
+                        return false;
                     } , 100
                 );
                 return false;

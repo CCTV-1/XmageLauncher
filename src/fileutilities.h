@@ -8,6 +8,7 @@
 
 #include "commontype.h"
 
-std::shared_future<void> unzip_client( Glib::ustring client_zip_name , Glib::ustring unzip_path );
+
+std::shared_future<void> unzip_client( Glib::ustring client_zip_name , Glib::ustring unzip_path ) noexcept( false );
 
 #endif

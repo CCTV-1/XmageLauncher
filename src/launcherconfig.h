@@ -14,25 +14,18 @@ public:
     LauncherConfig& operator=( const LauncherConfig& ) = delete;
     LauncherConfig& operator==( LauncherConfig&& ) = delete;
 
+    //getter and setter
     const Glib::ustring& get_java_path( void );
     const Glib::ustring& get_beta_version( void );
     const Glib::ustring& get_beta_path( void );
-    const Glib::ustring& get_beta_client( void );
-    const Glib::ustring& get_beta_server( void );
     const Glib::ustring& get_release_version( void );
     const Glib::ustring& get_release_path( void );
-    const Glib::ustring& get_release_client( void );
-    const Glib::ustring& get_release_server( void );
     const bool         & get_using_proxy( void );
     const Glib::ustring& get_proxy_scheme( void );
     const Glib::ustring& get_proxy_host( void );
     const std::uint32_t& get_proxy_port( void );
 
     LauncherConfig& set_java_path( const Glib::ustring& );
-    LauncherConfig& set_beta_client( const Glib::ustring& );
-    LauncherConfig& set_beta_server( const Glib::ustring& );
-    LauncherConfig& set_release_client( const Glib::ustring& );
-    LauncherConfig& set_release_server( const Glib::ustring& );
     LauncherConfig& set_beta_version( const Glib::ustring& );
     LauncherConfig& set_beta_path( const Glib::ustring& );
     LauncherConfig& set_release_version( const Glib::ustring& );
@@ -41,6 +34,21 @@ public:
     LauncherConfig& set_proxy_scheme( const Glib::ustring& );
     LauncherConfig& set_proxy_host( const Glib::ustring& );
     LauncherConfig& set_proxy_port( const std::uint32_t& );
+
+    //only getter
+    const Glib::ustring& get_beta_client( void );
+    const Glib::ustring& get_beta_server( void );
+    const Glib::ustring& get_release_client( void );
+    const Glib::ustring& get_release_server( void );
+    //don't exitst
+    //LauncherConfig& set_beta_client( const Glib::ustring& );
+    //LauncherConfig& set_beta_server( const Glib::ustring& );
+    //LauncherConfig& set_release_client( const Glib::ustring& );
+    //LauncherConfig& set_release_server( const Glib::ustring& );
+
+    //getter special case return a new string.
+    Glib::ustring get_release_mage_version( void );
+    Glib::ustring get_beta_mage_version( void );
 private:
     LauncherConfig();
 

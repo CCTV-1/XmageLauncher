@@ -15,19 +15,19 @@ LauncherConfig::LauncherConfig()
         //config.ini content like:
         //[Beta]
         //version=1.4.35.dev_2019-04-28_20-43
-        //installed_path=betamage
+        //installed_path=BetaXmage
         //[Release]
         //version=xmage_1.4.35V2
-        //installed_path=releasemage
+        //installed_path=ReleaseXmage
         //[Setting]
         //using_proxy=false
         //proxy_scheme=http
         //proxy_host=localhost
         //proxy_port=1080
         this->config_file.set_string( "Beta" , "version" , "1.4.35.dev_2019-04-28_20-43" );
-        this->config_file.set_string( "Beta" , "installed_path" , "betamage" );
-        this->config_file.set_string( "Release" , "version" , "xmage_1.4.35V2" );
-        this->config_file.set_string( "Release" , "installed_path" , "releasemage" );
+        this->config_file.set_string( "Beta" , "installed_path" , "BetaXmage" );
+        this->config_file.set_string( "Release" , "version" , "xmage_1.4.35V1" );
+        this->config_file.set_string( "Release" , "installed_path" , "ReleaseXmage" );
         this->config_file.set_boolean( "Setting" , "using_proxy" , false );
         this->config_file.set_string( "Setting" , "proxy_scheme" , "http" );
         this->config_file.set_string( "Setting" , "proxy_host" , "localhost" );
@@ -50,8 +50,9 @@ LauncherConfig::LauncherConfig()
     this->beta_client = this->beta_path + "/mage-client/";
     this->beta_server = this->beta_path + "/mage-server/";
     this->release_version = this->config_file.get_string( "Release" , "version" );
-    this->release_client = this->config_file.get_string( "Release" , "installed_path" ) + "/mage-client/";
-    this->release_server = this->config_file.get_string( "Release" , "installed_path" ) + "/mage-server/";
+    this->release_path = this->config_file.get_string( "Release" , "installed_path" );
+    this->release_client = this->release_path  + "/mage-client/";
+    this->release_server = this->release_path  + "/mage-server/";
     this->using_proxy = this->config_file.get_boolean( "Setting" , "using_proxy" );
     this->proxy_scheme = this->config_file.get_string( "Setting" , "proxy_scheme" );
     this->proxy_host = this->config_file.get_string( "Setting" , "proxy_host" );
@@ -67,29 +68,19 @@ LauncherConfig::~LauncherConfig()
     getter( Glib::ustring , java_path )
     getter( Glib::ustring , beta_version )
     getter( Glib::ustring , beta_path )
-    getter( Glib::ustring , beta_client )
-    getter( Glib::ustring , beta_server )
     getter( Glib::ustring , release_version )
     getter( Glib::ustring , release_path )
-    getter( Glib::ustring , release_client )
-    getter( Glib::ustring , release_server )
     getter( bool          , using_proxy )
     getter( Glib::ustring , proxy_scheme )
     getter( Glib::ustring , proxy_host )
     getter( std::uint32_t , proxy_port )
+
+    //only setter
+    getter( Glib::ustring , beta_client )
+    getter( Glib::ustring , beta_server )
+    getter( Glib::ustring , release_client )
+    getter( Glib::ustring , release_server )
 #undef getter
-#define setter(type,membername)\
-    LauncherConfig& LauncherConfig::set_##membername( const type& _##membername )\
-    {\
-        this->membername = _##membername;\
-        return *this;\
-    }
-    setter( Glib::ustring , java_path )
-    setter( Glib::ustring , beta_client )
-    setter( Glib::ustring , beta_server )
-    setter( Glib::ustring , release_client )
-    setter( Glib::ustring , release_server )
-#undef setter
 #define setter(type,config_type,config_group,config_key,membername)\
     LauncherConfig& LauncherConfig::set_##membername( const type& _##membername )\
     {\
@@ -106,6 +97,45 @@ LauncherConfig::~LauncherConfig()
     setter( Glib::ustring , string  , Setting , proxy_host     , proxy_host )
     setter( std::uint32_t , integer , Setting , proxy_port     , proxy_port )
 #undef setter
+
+//getter special case
+Glib::ustring LauncherConfig::get_release_mage_version( void )
+{
+    //xmage_1.4.35V1 to 1.4.35
+    Glib::ustring mage_version;
+
+    for (
+        std::uint32_t i = sizeof( "xmage_" )/sizeof( char ) - 1;
+        this->release_version[i] != 'V' && i <= this->release_version.size();
+        i++
+    )
+    {
+        mage_version += this->release_version[i];
+    }
+    return mage_version;
+}
+
+Glib::ustring LauncherConfig::get_beta_mage_version( void )
+{
+    //1.4.35.dev_2019-04-28_20-43 to 1.4.35
+    Glib::ustring mage_version;
+
+    std::uint32_t dot_num = 0;
+    for ( std::uint32_t i = 0 ; dot_num <=2 && i <= this->release_version.size() ; i++ )
+    {
+        if ( this->beta_version[i] == '.' )
+            dot_num++;
+        mage_version += this->beta_version[i];
+    }
+    return mage_version;
+}
+
+//setter special case
+LauncherConfig& LauncherConfig::set_java_path( const Glib::ustring& _java_path )
+{
+    this->java_path = _java_path;
+    return *this;
+}
 
 LauncherConfig& LauncherConfig::get_config( void )
 {
