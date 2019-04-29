@@ -78,7 +78,12 @@ LauncherConfig::~LauncherConfig()
     getter( Glib::ustring , proxy_host )
     getter( std::uint32_t , proxy_port )
 #undef getter
-#define setter(type,membername) LauncherConfig& LauncherConfig::set_##membername( const type& _##membername ) { this->membername = _##membername; }
+#define setter(type,membername)\
+    LauncherConfig& LauncherConfig::set_##membername( const type& _##membername )\
+    {\
+        this->membername = _##membername;\
+        return *this;\
+    }
     setter( Glib::ustring , java_path )
     setter( Glib::ustring , beta_client )
     setter( Glib::ustring , beta_server )
