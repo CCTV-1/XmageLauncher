@@ -83,10 +83,6 @@ static client_desc_t get_last_release_version( void ) noexcept( false )
     //    "assets": [
     //        {
     //            ... unimportant ...
-    //            "size": 148844576,
-    //            ...  unimportant ...
-    //            "created_at": "2019-04-23T21:30:45Z",
-    //            "updated_at": "2019-04-23T21:34:32Z",
     //            "browser_download_url": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V0/xmage_1.4.35V0.zip"
     //        }
     //    ],
@@ -166,26 +162,6 @@ static client_desc_t get_last_release_version( void ) noexcept( false )
         std::shared_ptr<char> jsons( json_dumps( last_assets , JSON_INDENT( 4 ) ) , free );
         except_message += jsons.get();
         except_message += "' element 0 format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
-
-    json_t * created_time = json_object_get( last_assets , "created_at" );
-    if ( json_is_string( created_time )  == false )
-    {
-        except_message += ":network json:'";
-        std::shared_ptr<char> jsons( json_dumps( last_assets , JSON_INDENT( 4 ) ) , free );
-        except_message += jsons.get();
-        except_message += "' node 'created_at' format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
-
-    json_t * client_size = json_object_get( last_assets , "size" );
-    if ( json_is_integer( client_size )  == false )
-    {
-        except_message += ":network json:'";
-        std::shared_ptr<char> jsons( json_dumps( last_assets , JSON_INDENT( 4 ) ) , free );
-        except_message += jsons.get();
-        except_message += "' node 'size' format does not meet expectations";
         throw std::invalid_argument( except_message );
     }
 

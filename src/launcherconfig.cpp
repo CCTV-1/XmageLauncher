@@ -24,6 +24,8 @@ LauncherConfig::LauncherConfig()
         //proxy_scheme=http
         //proxy_host=localhost
         //proxy_port=1080
+        //jvm_xms=256
+        //jvm_xmx=1024
         this->config_file.set_string( "Beta" , "version" , "1.4.35.dev_2019-04-28_20-43" );
         this->config_file.set_string( "Beta" , "installed_path" , "BetaXmage" );
         this->config_file.set_string( "Release" , "version" , "xmage_1.4.35V1" );
@@ -32,6 +34,8 @@ LauncherConfig::LauncherConfig()
         this->config_file.set_string( "Setting" , "proxy_scheme" , "http" );
         this->config_file.set_string( "Setting" , "proxy_host" , "localhost" );
         this->config_file.set_integer( "Setting" , "proxy_port" , 1080 );
+        this->config_file.set_integer( "Setting" , "jvm_xms" , 256 );
+        this->config_file.set_integer( "Setting" , "jvm_xmx" , 1024 );
         g_log( __func__ , G_LOG_LEVEL_MESSAGE , "Glib::FileError code:%d" , e.code() );
     }
     catch( const Glib::KeyFileError& e )
@@ -57,6 +61,8 @@ LauncherConfig::LauncherConfig()
     this->proxy_scheme = this->config_file.get_string( "Setting" , "proxy_scheme" );
     this->proxy_host = this->config_file.get_string( "Setting" , "proxy_host" );
     this->proxy_port = this->config_file.get_integer( "Setting" , "proxy_port" );
+    this->jvm_xms = this->config_file.get_integer( "Setting" , "jvm_xms" );
+    this->jvm_xmx = this->config_file.get_integer( "Setting" , "jvm_xmx" );
 }
 
 LauncherConfig::~LauncherConfig()
@@ -74,6 +80,8 @@ LauncherConfig::~LauncherConfig()
     getter( Glib::ustring , proxy_scheme )
     getter( Glib::ustring , proxy_host )
     getter( std::uint32_t , proxy_port )
+    getter( std::uint32_t , jvm_xms )
+    getter( std::uint32_t , jvm_xmx )
 
     //only setter
     getter( Glib::ustring , beta_client )
@@ -96,6 +104,8 @@ LauncherConfig::~LauncherConfig()
     setter( Glib::ustring , string  , Setting , proxy_scheme   , proxy_scheme )
     setter( Glib::ustring , string  , Setting , proxy_host     , proxy_host )
     setter( std::uint32_t , integer , Setting , proxy_port     , proxy_port )
+    setter( std::uint32_t , integer , Setting , jvm_xms        , jvm_xms )
+    setter( std::uint32_t , integer , Setting , jvm_xmx        , jvm_xmx )
 #undef setter
 
 //getter special case

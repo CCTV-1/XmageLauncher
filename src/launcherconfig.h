@@ -24,6 +24,8 @@ public:
     const Glib::ustring& get_proxy_scheme( void );
     const Glib::ustring& get_proxy_host( void );
     const std::uint32_t& get_proxy_port( void );
+    const std::uint32_t& get_jvm_xms( void );
+    const std::uint32_t& get_jvm_xmx( void );
 
     LauncherConfig& set_java_path( const Glib::ustring& );
     LauncherConfig& set_beta_version( const Glib::ustring& );
@@ -34,6 +36,8 @@ public:
     LauncherConfig& set_proxy_scheme( const Glib::ustring& );
     LauncherConfig& set_proxy_host( const Glib::ustring& );
     LauncherConfig& set_proxy_port( const std::uint32_t& );
+    LauncherConfig& set_jvm_xms( const std::uint32_t& );
+    LauncherConfig& set_jvm_xmx( const std::uint32_t& );
 
     //only getter
     const Glib::ustring& get_beta_client( void );
@@ -67,6 +71,10 @@ private:
     Glib::ustring proxy_scheme;
     Glib::ustring proxy_host;
     std::uint32_t proxy_port;
+    //jvm initial heap size.
+    std::uint32_t jvm_xms;
+    //jvm maximum heap size.
+    std::uint32_t jvm_xmx;
 }config_t;
 
 #endif
