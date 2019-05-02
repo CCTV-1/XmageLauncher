@@ -2,5 +2,6 @@
 <gresources>
   <gresource prefix="/">
     <file compressed="true">resources/Launcher.ui</file>
+    <file compressed="true">resources/setting.png</file>
   </gresource>
 </gresources>
