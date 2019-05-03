@@ -1,4 +1,8 @@
 # Dependency
-zlib
+autoconf
+automake
+gettext
 gtkmm
+glibmm
+libzip
 libcurl
