@@ -1,7 +1,5 @@
 # Dependency
-autoconf
-automake
-gettext
+jansson
 gtkmm
 glibmm
 libzip
