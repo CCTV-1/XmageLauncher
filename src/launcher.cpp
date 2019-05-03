@@ -74,10 +74,6 @@ auto& launcher_initial( void )
     }
 
     auto & config = config_t::get_config();
-    if ( config.get_using_proxy() )
-    {
-        set_proxy( config.get_proxy_scheme() , config.get_proxy_host() , config.get_proxy_port() );
-    }
     return config;
 }
 
@@ -89,8 +85,13 @@ void launcher_cleanup( void )
 int main ( int argc , char * argv[] )
 {
     auto& config = launcher_initial();
+    
+    if ( config.get_using_proxy() )
+    {
+        set_proxy( config.get_proxy_scheme() , config.get_proxy_host() , config.get_proxy_port() );
+    }
+    auto desc = get_last_version( config.get_update_source() );
 
-    auto desc = get_last_version( XmageType::Release );
     download_desc_t download_desc = { 0 , 0 };
     auto download_desc_ptr = &download_desc;
     auto app = Gtk::Application::create( argc , argv );
@@ -234,12 +235,13 @@ int main ( int argc , char * argv[] )
     );
     Gtk::ComboBox * update_source;
     builder->get_widget( "UpdateSource" , update_source );
-    //update_source->set_active_id( "Release" );
+    Glib::ustring source_string = xmagetype_to_string( config.get_update_source() );
+    update_source->set_active_id( source_string );
     update_source->signal_changed().connect(
         [ &config , update_source ]()
         {
             Glib::ustring source = update_source->get_active_id();
-            g_log( __func__ , G_LOG_LEVEL_MESSAGE , "source:'%s'" , source.c_str() );
+            config.set_update_source( string_to_xmagetype( source ) );
         }
     );
 

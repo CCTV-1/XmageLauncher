@@ -4,6 +4,8 @@
 
 #include <glibmm.h>
 
+#include "commontype.h"
+
 typedef class LauncherConfig
 {
 public:
@@ -26,6 +28,7 @@ public:
     const std::uint32_t& get_proxy_port( void );
     const std::uint32_t& get_jvm_xms( void );
     const std::uint32_t& get_jvm_xmx( void );
+    const XmageType&     get_update_source( void );
 
     LauncherConfig& set_java_path( const Glib::ustring& );
     LauncherConfig& set_beta_version( const Glib::ustring& );
@@ -38,6 +41,7 @@ public:
     LauncherConfig& set_proxy_port( const std::uint32_t& );
     LauncherConfig& set_jvm_xms( const std::uint32_t& );
     LauncherConfig& set_jvm_xmx( const std::uint32_t& );
+    LauncherConfig& set_update_source( const XmageType& );
 
     //only getter
     const Glib::ustring& get_beta_client( void );
@@ -75,6 +79,7 @@ private:
     std::uint32_t jvm_xms;
     //jvm maximum heap size.
     std::uint32_t jvm_xmx;
+    XmageType update_source;
 }config_t;
 
 #endif
