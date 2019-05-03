@@ -99,6 +99,7 @@ int main ( int argc , char * argv[] )
     Gtk::Window * window = nullptr;
     builder->get_widget( "LauncherWindow" , window );
 
+    //main window button
     Gtk::Button * client_button;
     builder->get_widget( "LauncherClient" , client_button );
     client_button->signal_clicked().connect(
@@ -107,7 +108,6 @@ int main ( int argc , char * argv[] )
             launch_client( config , XmageType::Release );
         }
     );
-
     Gtk::Button * server_button;
     builder->get_widget( "LauncherServer" , server_button );
     server_button->signal_clicked().connect(
@@ -116,7 +116,6 @@ int main ( int argc , char * argv[] )
             launch_server( config , XmageType::Release );
         }
     );
-
     Gtk::Button * xmage_button;
     builder->get_widget( "LauncherXmage" , xmage_button );
     xmage_button->signal_clicked().connect(
@@ -126,18 +125,16 @@ int main ( int argc , char * argv[] )
             launch_server( config , XmageType::Release );
         }
     );
-
+    //main window progress
     Gtk::ProgressBar * progrees_bar;
     builder->get_widget( "Progress" , progrees_bar );
-
     Gtk::Label * progrees_target;
     builder->get_widget( "ProgressTarget" , progrees_target );
-
     Gtk::Label * progrees_value;
     builder->get_widget( "ProgressValue" , progrees_value );
-
     Gtk::Dialog * setting_dialog;
     builder->get_widget( "SettingDialog" , setting_dialog );
+
 
     Gtk::Button * setting_button;
     builder->get_widget( "SettingButton" , setting_button );
@@ -145,6 +142,104 @@ int main ( int argc , char * argv[] )
         [ setting_dialog ]()
         {
             setting_dialog->run();
+        }
+    );
+
+    //Setting menu dialog
+    Gtk::ComboBox * proxy_type;
+    builder->get_widget( "ProxyType" , proxy_type );
+    if ( config.get_using_proxy() )
+    {
+        proxy_type->set_active_id( config.get_proxy_scheme() );
+    }
+    else
+    {
+        proxy_type->set_active_id( "None" );
+    }
+    proxy_type->signal_changed().connect(
+        [ &config , proxy_type ]()
+        {
+            Glib::ustring proxy_string = proxy_type->get_active_id();
+            Glib::ustring diff_string = proxy_string.lowercase();
+            if ( diff_string.compare( "none" ) == 0 )
+            {
+                config.set_using_proxy( false );
+            }
+            else
+            {
+                config.set_using_proxy( true );
+                config.set_proxy_scheme( proxy_string );
+            }
+        }
+    );
+    Gtk::Entry * proxy_host;
+    builder->get_widget( "ProxyHost" , proxy_host );
+    proxy_host->set_text( config.get_proxy_host() );
+    proxy_host->signal_changed().connect(
+        [ &config , proxy_host ]()
+        {
+            Glib::ustring host_string = proxy_host->get_text();
+            config.set_proxy_host( host_string );
+        }
+    );
+    Gtk::SpinButton * proxy_port;
+    builder->get_widget( "ProxyPort" , proxy_port );
+    proxy_port->set_value( config.get_proxy_port() );
+    proxy_port->signal_changed().connect(
+        [ &config , proxy_port ]()
+        {
+            double port_value = proxy_port->get_value();
+            config.set_proxy_port( port_value );
+        }
+    );
+    Gtk::SpinButton * xms_opt;
+    builder->get_widget( "XmsOpt" , xms_opt );
+    xms_opt->set_value( config.get_jvm_xms() );
+    xms_opt->signal_changed().connect(
+        [ &config , xms_opt ]()
+        {
+            double xms_value = xms_opt->get_value();
+            config.set_jvm_xms( xms_value );
+        }
+    );
+    Gtk::SpinButton * xmx_opt;
+    builder->get_widget( "XmxOpt" , xmx_opt );
+    xmx_opt->set_value( config.get_jvm_xmx() );
+    xmx_opt->signal_changed().connect(
+        [ &config , xmx_opt ]()
+        {
+            double xmx_value = xmx_opt->get_value();
+            config.set_proxy_port( xmx_value );
+        }
+    );
+    Gtk::FileChooserButton * release_path;
+    builder->get_widget( "ReleaseMagePath" , release_path );
+    release_path->set_filename( config.get_release_path() );
+    release_path->signal_selection_changed().connect(
+        [ &config , release_path ]()
+        {
+            Glib::ustring new_release_path = release_path->get_filename();
+            config.set_release_path( new_release_path );
+        }
+    );
+    Gtk::FileChooserButton * beta_path;
+    builder->get_widget( "BetaMagePath" , beta_path );
+    beta_path->set_filename( config.get_beta_path() );
+    beta_path->signal_selection_changed().connect(
+        [ &config , beta_path ]()
+        {
+            Glib::ustring new_beta_path = beta_path->get_filename();
+            config.set_beta_path( new_beta_path );
+        }
+    );
+    Gtk::ComboBox * update_source;
+    builder->get_widget( "UpdateSource" , update_source );
+    //update_source->set_active_id( "Release" );
+    update_source->signal_changed().connect(
+        [ &config , update_source ]()
+        {
+            Glib::ustring source = update_source->get_active_id();
+            g_log( __func__ , G_LOG_LEVEL_MESSAGE , "source:'%s'" , source.c_str() );
         }
     );
 
@@ -157,7 +252,17 @@ int main ( int argc , char * argv[] )
             if ( desc_status == std::future_status::ready )
             {
                 progrees_target->set_label( "check update" );
-                client_desc_t client_desc = desc.get();
+                client_desc_t client_desc;
+                try
+                {
+                    client_desc = desc.get();
+                }
+                catch ( const std::exception& e )
+                {
+                    //get update information failure
+                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , e.what() );
+                    return false;
+                }
                 g_log( __func__ , G_LOG_LEVEL_MESSAGE , "installed xmage version:'%s'." , config.get_release_version().c_str() );
                 g_log( __func__ , G_LOG_LEVEL_MESSAGE , "last xmage version:'%s',download url:'%s'." , client_desc.version_name.c_str() , client_desc.download_url.c_str() );
                 if ( client_desc.version_name.compare( config.get_release_version() ) )

@@ -330,14 +330,15 @@ bool network_utilities_initial( void )
 bool set_proxy( Glib::ustring scheme , Glib::ustring hostname , std::uint32_t port )
 {
     Glib::ustring proxy_desc;
+    Glib::ustring diff_scheme = scheme.lowercase();
 
     if (
-        scheme != "http"    &&
-        scheme != "https"   &&
-        scheme != "socks4"  &&
-        scheme != "socks4a" &&
-        scheme != "socks5"  &&
-        scheme != "socks5h"
+        diff_scheme != "http"    &&
+        diff_scheme != "https"   &&
+        diff_scheme != "socks4"  &&
+        diff_scheme != "socks4a" &&
+        diff_scheme != "socks5"  &&
+        diff_scheme != "socks5h"
     )
     {
         return false;
