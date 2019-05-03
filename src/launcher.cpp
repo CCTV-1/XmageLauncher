@@ -6,6 +6,7 @@
 #include <curl/curl.h>
 #include <jansson.h>
 #include <gtkmm.h>
+#include <glib/gi18n.h>
 
 #include "commontype.h"
 #include "networkutilities.h"
@@ -88,6 +89,11 @@ void launcher_cleanup( void )
 
 int main ( int argc , char * argv[] )
 {
+    setlocale( LC_ALL , "" );
+    bindtextdomain( "XmageLauncher" , "zh_CN" );
+    bind_textdomain_codeset( "XmageLauncher" , "UTF-8" );
+    textdomain( "XmageLauncher" );
+
     auto& config = launcher_initial();
 
     auto desc = get_last_version( XmageType::Release );
@@ -156,17 +162,17 @@ int main ( int argc , char * argv[] )
             std::future_status desc_status = desc.wait_for( std::chrono::microseconds( 20 ) );
             if ( desc_status == std::future_status::ready )
             {
-                progrees_target->set_label( "check update" );
+                progrees_target->set_label( _( "check update" ) );
                 client_desc_t client_desc = desc.get();
-                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "installed xmage version:'%s'." , config.get_release_version().c_str() );
-                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "last xmage version:'%s',download url:'%s'." , client_desc.version_name.c_str() , client_desc.download_url.c_str() );
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , _( "installed xmage version:'%s'." ) , config.get_release_version().c_str() );
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , _( "last xmage version:'%s',download url:'%s'." ) , client_desc.version_name.c_str() , client_desc.download_url.c_str() );
                 if ( client_desc.version_name.compare( config.get_release_version() ) )
                 {
-                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , "exitst new xmage,now download." );
+                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , _( "exitst new xmage,now download." ) );
                 }
                 else
                 {
-                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , "not exitst new xmage." );
+                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , _( "not exitst new xmage." ) );
                     return false;
                 }
 
@@ -178,7 +184,7 @@ int main ( int argc , char * argv[] )
                 Glib::signal_timeout().connect(
                     [ client_desc , download_status , progrees_bar , progrees_target , progrees_value , download_desc_ptr , &config ]()
                     {
-                        progrees_target->set_label( "download update" );
+                        progrees_target->set_label( _( "download update" ) );
                         //may continue download
                         if ( download_status.valid() )
                         {
@@ -192,11 +198,11 @@ int main ( int argc , char * argv[] )
                             {
                                 if ( download_status.get() )
                                 {
-                                    progrees_target->set_label( "download success,install..." );
+                                    progrees_target->set_label( _( "download success,install..." ) );
                                 }
                                 else
                                 {
-                                    progrees_target->set_label( "download failure" );
+                                    progrees_target->set_label( _( "download failure" ) );
                                     return false;
                                 }
                             }
@@ -207,7 +213,7 @@ int main ( int argc , char * argv[] )
                         }
                         else
                         {
-                            g_log( __func__ , G_LOG_LEVEL_MESSAGE , "exitst new xmage zip,continue download,install..." );
+                            g_log( __func__ , G_LOG_LEVEL_MESSAGE , _( "exitst new xmage zip,continue download,install..." ) );
                         }
 
                         progrees_bar->set_fraction( 0 );
@@ -216,11 +222,11 @@ int main ( int argc , char * argv[] )
                         Glib::signal_timeout().connect(
                             [ progrees_target , client_desc , unzip_future , &config ]()
                             {
-                                progrees_target->set_label( "install update" );
+                                progrees_target->set_label( _( "install update" ) );
                                 std::future_status unzip_status = unzip_future.wait_for( std::chrono::microseconds( 20 ) );
                                 if ( unzip_status == std::future_status::ready )
                                 {
-                                    progrees_target->set_label( "install success" );
+                                    progrees_target->set_label( _( "install success" ) );
                                     config.set_release_version( client_desc.version_name );
                                     return false;
                                 }

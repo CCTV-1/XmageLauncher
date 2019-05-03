@@ -28,7 +28,7 @@ LauncherConfig::LauncherConfig()
         //jvm_xmx=1024
         this->config_file.set_string( "Beta" , "version" , "1.4.35.dev_2019-04-28_20-43" );
         this->config_file.set_string( "Beta" , "installed_path" , "BetaXmage" );
-        this->config_file.set_string( "Release" , "version" , "xmage_1.4.35V1" );
+        this->config_file.set_string( "Release" , "version" , "xmage_1.4.35V2" );
         this->config_file.set_string( "Release" , "installed_path" , "ReleaseXmage" );
         this->config_file.set_boolean( "Setting" , "using_proxy" , false );
         this->config_file.set_string( "Setting" , "proxy_scheme" , "http" );
