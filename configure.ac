@@ -1,0 +1,28 @@
+AC_INIT([XmageLauncher], [1], [script.tar.gz@gmail.com])
+AM_INIT_AUTOMAKE([-Wall foreign])
+AC_PROG_CXX
+AX_CXX_COMPILE_STDCXX_17
+
+PKG_PROG_PKG_CONFIG
+PKG_CHECK_MODULES([LIBZIP], [libzip])
+PKG_CHECK_MODULES([LIBCURL], [libcurl])
+PKG_CHECK_MODULES([GLIBMM], [glibmm-2.4])
+PKG_CHECK_MODULES([GTKMM], [gtkmm-3.0])
+PKG_CHECK_MODULES([JANSSON], [jansson])
+AC_CONFIG_FILES([
+    Makefile
+    src/Makefile
+    po/Makefile.in
+])
+
+AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION([0.18.1])
+GETTEXT_PACKAGE=${XmageLauncher}
+AC_SUBST([GETTEXT_PACKAGE])
+AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"],
+		   [XmageLauncher])
+ALL_LINGUAS="en_US zh_CN zh_HK"
+AM_GLIB_GNU_GETTEXT
+
+IT_PROG_INTLTOOL([0.40])
+AC_OUTPUT
