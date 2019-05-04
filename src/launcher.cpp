@@ -21,8 +21,8 @@ bool launch_client( config_t& config , XmageType type )
     else
         version = config.get_beta_mage_version();
 
-    Glib::ustring xms_opt = Glib::ustring( "-Xms" ) + std::to_string( config.get_jvm_xms() ) + "m";
-    Glib::ustring xmx_opt = Glib::ustring( "-Xmx" ) + std::to_string( config.get_jvm_xmx() ) + "m";
+    Glib::ustring xms_opt = Glib::ustring( "-Xms" ) + std::to_string( config.get_jvm_xms() ) + "M";
+    Glib::ustring xmx_opt = Glib::ustring( "-Xmx" ) + std::to_string( config.get_jvm_xmx() ) + "M";
     std::vector<Glib::ustring> argvs({
         config.get_java_path() , xms_opt , xmx_opt , 
         "-XX:MaxPermSize=384m" , "-XX:+UseConcMarkSweepGC" ,
@@ -47,8 +47,8 @@ bool launch_server( config_t& config , XmageType type )
     else
         version = config.get_beta_mage_version();
 
-    Glib::ustring xms_opt = Glib::ustring( "-Xms" ) + std::to_string( config.get_jvm_xms() ) + "m";
-    Glib::ustring xmx_opt = Glib::ustring( "-Xmx" ) + std::to_string( config.get_jvm_xmx() ) + "m";
+    Glib::ustring xms_opt = Glib::ustring( "-Xms" ) + std::to_string( config.get_jvm_xms() ) + "M";
+    Glib::ustring xmx_opt = Glib::ustring( "-Xmx" ) + std::to_string( config.get_jvm_xmx() ) + "M";
     std::vector<Glib::ustring> argvs({
         config.get_java_path() , xms_opt , xmx_opt ,"-XX:MaxPermSize=384m" , "-Djava.security.policy=./config/security.policy",
         "-Djava.util.logging.config.file=./config/logging.config" , "-Dlog4j.configuration=file:./config/log4j.properties"
@@ -210,7 +210,7 @@ int main ( int argc , char * argv[] )
         [ &config , xmx_opt ]()
         {
             double xmx_value = xmx_opt->get_value();
-            config.set_proxy_port( xmx_value );
+            config.set_jvm_xmx( xmx_value );
         }
     );
     Gtk::FileChooserButton * release_path;
