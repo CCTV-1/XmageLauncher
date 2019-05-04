@@ -53,7 +53,7 @@ static std::size_t get_json_callback( char * content , std::size_t size , std::s
     return realsize;
 }
 
-static client_desc_t get_last_release_version( void ) noexcept( false )
+static xmage_desc_t get_last_release_version( void ) noexcept( false )
 {
     std::string except_message( __func__ );
     //http://xmage.de/xmage/config.json
@@ -179,7 +179,7 @@ static client_desc_t get_last_release_version( void ) noexcept( false )
     return { json_string_value( version_name ) , json_string_value( download_url ) };
 }
 
-static client_desc_t get_last_beta_version( void ) noexcept( false )
+static xmage_desc_t get_last_beta_version( void ) noexcept( false )
 {
     std::string except_message( __func__ );
     Glib::ustring api_url = "http://xmage.today/config.json";
@@ -285,11 +285,12 @@ static client_desc_t get_last_beta_version( void ) noexcept( false )
     return { json_string_value( version ) , json_string_value( download_url ) };
 }
 
-static bool download_client_callback( client_desc_t client_desc , download_desc_t * download_desc )
+static bool download_client_callback( xmage_desc_t client_desc , download_desc_t * download_desc )
 {
     std::shared_ptr<CURL> curl_handle( curl_easy_init() , curl_easy_cleanup );
 
-    Glib::ustring temp_name = client_desc.version_name + ".zip";
+    //output temp file,download success,rename to version.zip,to support check local zip continue download.
+    Glib::ustring temp_name = get_download_temp_name( client_desc );
     std::shared_ptr<FILE> download_file( fopen( temp_name.c_str() , "wb+" ) , fclose );
     if ( download_file.get() == nullptr )
     {
@@ -361,26 +362,36 @@ bool set_proxy( Glib::ustring scheme , Glib::ustring hostname , std::uint32_t po
     return true;
 }
 
-std::shared_future<client_desc_t> get_last_version( XmageType type )
+std::shared_future<xmage_desc_t> get_last_version( XmageType type )
 {
-    std::function<client_desc_t()> get_version_func;
+    std::function<xmage_desc_t()> get_version_func;
     if ( type == XmageType::Release )
         get_version_func = std::bind( get_last_release_version );
     else
         get_version_func = std::bind( get_last_beta_version );
 
-    std::packaged_task<client_desc_t()> task( get_version_func );
-    std::shared_future<client_desc_t> version_future = task.get_future();
+    std::packaged_task<xmage_desc_t()> task( get_version_func );
+    std::shared_future<xmage_desc_t> version_future = task.get_future();
     std::thread( std::move(task) ).detach();
 
     return version_future;
 }
 
-std::shared_future<bool> download_client( client_desc_t client_desc , download_desc_t * download_desc )
+std::shared_future<bool> download_xmage( xmage_desc_t client_desc , download_desc_t * download_desc )
 {
     std::packaged_task<bool()> task( std::bind( download_client_callback , client_desc , download_desc ) );
     std::shared_future<bool> download_future = task.get_future();
     std::thread( std::move(task) ).detach();
 
     return download_future;
+}
+
+Glib::ustring get_installation_package_name( xmage_desc_t client_desc )
+{
+    return client_desc.version_name + ".zip";
+}
+
+Glib::ustring get_download_temp_name( xmage_desc_t client_desc )
+{
+    return client_desc.version_name + ".dl";
 }

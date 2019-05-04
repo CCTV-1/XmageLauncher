@@ -248,16 +248,16 @@ int main ( int argc , char * argv[] )
     window->show_all();
 
     Glib::signal_timeout().connect(
-        [ window , desc , progrees_bar , progrees_target , progrees_value , &config , download_desc_ptr ]()
+        [ desc , progrees_bar , progrees_target , progrees_value , &config , download_desc_ptr ]()
         {
             std::future_status desc_status = desc.wait_for( std::chrono::microseconds( 20 ) );
             if ( desc_status == std::future_status::ready )
             {
                 progrees_target->set_label( "check update" );
-                client_desc_t client_desc;
+                xmage_desc_t xmage_desc;
                 try
                 {
-                    client_desc = desc.get();
+                    xmage_desc = desc.get();
                 }
                 catch ( const std::exception& e )
                 {
@@ -266,24 +266,25 @@ int main ( int argc , char * argv[] )
                     return false;
                 }
                 g_log( __func__ , G_LOG_LEVEL_MESSAGE , "installed xmage version:'%s'." , config.get_release_version().c_str() );
-                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "last xmage version:'%s',download url:'%s'." , client_desc.version_name.c_str() , client_desc.download_url.c_str() );
-                if ( client_desc.version_name.compare( config.get_release_version() ) )
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "last xmage version:'%s',download url:'%s'." , xmage_desc.version_name.c_str() , xmage_desc.download_url.c_str() );
+                if ( xmage_desc.version_name.compare( config.get_release_version() ) )
                 {
-                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , "exitst new xmage,now download." );
+                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , "exist new xmage,now download." );
                 }
                 else
                 {
-                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , "not exitst new xmage." );
+                    progrees_target->set_label( "no need to update" );
                     return false;
                 }
 
                 std::shared_future<bool> download_status;
-                if ( std::filesystem::is_regular_file( client_desc.version_name.raw() + ".zip" ) == false )
+                //if exists
+                if ( std::filesystem::is_regular_file( get_installation_package_name( xmage_desc ).raw() ) == false )
                 {
-                    download_status = download_client( client_desc , download_desc_ptr );
+                    download_status = download_xmage( xmage_desc , download_desc_ptr );
                 }
                 Glib::signal_timeout().connect(
-                    [ client_desc , download_status , progrees_bar , progrees_target , progrees_value , download_desc_ptr , &config ]()
+                    [ xmage_desc , download_status , progrees_bar , progrees_target , progrees_value , download_desc_ptr , &config ]()
                     {
                         progrees_target->set_label( "download update" );
                         //may continue download
@@ -300,6 +301,7 @@ int main ( int argc , char * argv[] )
                                 if ( download_status.get() )
                                 {
                                     progrees_target->set_label( "download success,install..." );
+                                    std::filesystem::rename( get_download_temp_name( xmage_desc ).raw() , get_installation_package_name( xmage_desc ).raw() );
                                 }
                                 else
                                 {
@@ -314,21 +316,21 @@ int main ( int argc , char * argv[] )
                         }
                         else
                         {
-                            g_log( __func__ , G_LOG_LEVEL_MESSAGE , "exitst new xmage zip,continue download,install..." );
+                            g_log( __func__ , G_LOG_LEVEL_MESSAGE , "using local installation package" );
                         }
 
                         progrees_bar->set_fraction( 0 );
-                        progrees_value->set_label( "0/0" );
-                        auto unzip_future = unzip_client( client_desc.version_name + ".zip" ,  config.get_release_path() );
+                        progrees_value->set_label( "" );
+                        auto unzip_future = unzip_client( get_installation_package_name( xmage_desc ) ,  config.get_release_path() );
                         Glib::signal_timeout().connect(
-                            [ progrees_target , client_desc , unzip_future , &config ]()
+                            [ progrees_target , xmage_desc , unzip_future , &config ]()
                             {
                                 progrees_target->set_label( "install update" );
                                 std::future_status unzip_status = unzip_future.wait_for( std::chrono::microseconds( 20 ) );
                                 if ( unzip_status == std::future_status::ready )
                                 {
                                     progrees_target->set_label( "install success" );
-                                    config.set_release_version( client_desc.version_name );
+                                    config.set_release_version( xmage_desc.version_name );
                                     return false;
                                 }
                                 return true;

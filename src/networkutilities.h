@@ -15,7 +15,7 @@ typedef struct ClientDescription
 {
     Glib::ustring version_name;
     Glib::ustring download_url;
-}client_desc_t;
+}xmage_desc_t;
 
 typedef struct DownloadDescription
 {
@@ -31,8 +31,12 @@ bool network_utilities_initial( void );
 //scheme type see enum curl_proxytype
 bool set_proxy( Glib::ustring scheme , Glib::ustring hostname , std::uint32_t port );
 
-std::shared_future<client_desc_t> get_last_version( XmageType type );
+std::shared_future<xmage_desc_t> get_last_version( XmageType type );
 
-std::shared_future<bool> download_client( client_desc_t desc , download_desc_t * download_now = nullptr );
+std::shared_future<bool> download_xmage( xmage_desc_t desc , download_desc_t * download_now = nullptr );
+
+Glib::ustring get_installation_package_name( xmage_desc_t desc );
+
+Glib::ustring get_download_temp_name( xmage_desc_t desc );
 
 #endif
