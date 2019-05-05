@@ -1,4 +1,6 @@
 # Dependency
+intltool
+gettext
 jansson
 gtkmm
 glibmm
