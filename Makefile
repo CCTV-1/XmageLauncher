@@ -35,20 +35,20 @@ LANGUAGE:po/zh_CN.po po/en_US.po
 	msgfmt --output-file=locale/en_US/LC_MESSAGES/XmageLauncher.mo po/en_US.po
 po/en_US.po: po/XmageLauncher.pot
 ifeq ("$(wildcard po/en_US.po)","")
-	msgmerge -U po/en_US.po po/XmageLauncher.pot
-else
 	msginit --input=po/XmageLauncher.pot --locale=en_US --output=po/en_US.po
+else
+	msgmerge -U po/en_US.po po/XmageLauncher.pot
 endif
 po/zh_CN.po: po/XmageLauncher.pot
 ifeq ("$(wildcard po/zh_CN.po)","")
-	msgmerge -U po/zh_CN.po po/XmageLauncher.pot
-else
 	msginit --input=po/XmageLauncher.pot --locale=zh_CN --output=po/zh_CN.po
+else
+	msgmerge -U po/zh_CN.po po/XmageLauncher.pot
 endif
-resources/Launcher.ui.h: resources/Launcher.ui
-	intltool-extract --type=gettext/glade resources/Launcher.ui
 po/XmageLauncher.pot: resources/Launcher.ui.h src/launcher.cpp
 	xgettext --language=C++ --keyword=_ --keyword=N_ --output=po/XmageLauncher.pot resources/Launcher.ui.h src/launcher.cpp
+resources/Launcher.ui.h: resources/Launcher.ui
+	intltool-extract --type=gettext/glade resources/Launcher.ui
 clean:
 	-rm launcher src/launcher-resources.cpp fileutilities.o networkutilities.o resources/Launcher.ui.h\
 	po/XmageLauncher.pot po/zh_CN.po po/en_US.po locale/zh_CN/LC_MESSAGES/XmageLauncher.mo locale/en_US/LC_MESSAGES/XmageLauncher.mo

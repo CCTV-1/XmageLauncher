@@ -1,5 +1,4 @@
 char *s = N_("Setting");
-char *s = N_("Apply");
 char *s = N_("proxy type");
 char *s = N_("proxy port");
 char *s = N_("jvm maximum heap size");

@@ -140,12 +140,19 @@ int main ( int argc , char * argv[] )
     //Setting menu dialog
     Gtk::Dialog * setting_dialog;
     builder->get_widget( "SettingDialog" , setting_dialog );
+    setting_dialog->add_button( _( "close menu" ) , 0 );
+    setting_dialog->signal_response().connect(
+        [ setting_dialog ]( int )
+        {
+            setting_dialog->hide();
+        }
+    );
     Gtk::Button * setting_button;
     builder->get_widget( "SettingButton" , setting_button );
     setting_button->signal_clicked().connect(
         [ setting_dialog ]()
         {
-            setting_dialog->run();
+            setting_dialog->show_all();
         }
     );
     Gtk::ComboBox * proxy_type;

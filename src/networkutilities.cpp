@@ -82,12 +82,12 @@ static xmage_desc_t get_last_release_version( void ) noexcept( false )
     //    ... unimportant ...
     //    "assets": [
     //        {
-    //            "name": "mage_1.4.35V0"
+    //            "name": "mage_1.4.35V0.zip"
     //            ... unimportant ...
     //            "browser_download_url": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V0/xmage_1.4.35V0.zip"
     //        }
     //        {
-    //            "name": "mage_1.4.35V0a"
+    //            "name": "mage_1.4.35V0a.zip"
     //            ... unimportant ...
     //            "browser_download_url": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V0/xmage_1.4.35V0a.zip"
     //        }
@@ -179,9 +179,16 @@ static xmage_desc_t get_last_release_version( void ) noexcept( false )
         except_message += "' node 'name' format does not meet expectations";
         throw std::invalid_argument( except_message );
     }
+    Glib::ustring zip_name( json_string_value( version_name ) );
+    Glib::ustring version = zip_name;
+    if ( Glib::str_has_suffix( zip_name , ".zip" ) )
+    {
+        //".zip" exists NUL sizeof 5
+        version = zip_name.substr( 0 , zip_name.size() - sizeof( ".zip" ) + 1 );
+    }
 
     free( json_buff.buff );
-    return { json_string_value( version_name ) , json_string_value( download_url ) };
+    return { version , json_string_value( download_url ) };
 }
 
 static xmage_desc_t get_last_beta_version( void ) noexcept( false )

@@ -25,25 +25,25 @@
     </columns>
     <data>
       <row>
-        <col id="0" translatable="no">None</col>
+        <col id="0">None</col>
       </row>
       <row>
-        <col id="0" translatable="no">HTTP</col>
+        <col id="0">HTTP</col>
       </row>
       <row>
-        <col id="0" translatable="no">HTTPS</col>
+        <col id="0">HTTPS</col>
       </row>
       <row>
-        <col id="0" translatable="no">SOCKS4</col>
+        <col id="0">SOCKS4</col>
       </row>
       <row>
-        <col id="0" translatable="no">SOCKS4A</col>
+        <col id="0">SOCKS4A</col>
       </row>
       <row>
-        <col id="0" translatable="no">SOCKS5</col>
+        <col id="0">SOCKS5</col>
       </row>
       <row>
-        <col id="0" translatable="no">SOCKS5H</col>
+        <col id="0">SOCKS5H</col>
       </row>
     </data>
   </object>
@@ -67,6 +67,7 @@
     <property name="resizable">False</property>
     <property name="window_position">center</property>
     <property name="type_hint">dialog</property>
+    <property name="deletable">False</property>
     <child>
       <placeholder/>
     </child>
@@ -80,24 +81,13 @@
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton" id="ApplySetting">
-                <property name="label" translatable="yes">Apply</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="relief">none</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
+              <placeholder/>
             </child>
           </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="position">1</property>
+            <property name="position">0</property>
           </packing>
         </child>
         <child>
@@ -257,7 +247,7 @@
                           <object class="GtkEntry" id="ProxyHost">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="text" translatable="no">localhost</property>
+                            <property name="text">localhost</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-05-05 13:34+0800\n"
+"POT-Creation-Date: 2019-05-05 22:48+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,102 +22,102 @@ msgid "Setting"
 msgstr ""
 
 #: resources/Launcher.ui.h:2
-msgid "Apply"
-msgstr ""
-
-#: resources/Launcher.ui.h:3
 msgid "proxy type"
 msgstr ""
 
-#: resources/Launcher.ui.h:4
+#: resources/Launcher.ui.h:3
 msgid "proxy port"
 msgstr ""
 
-#: resources/Launcher.ui.h:5
+#: resources/Launcher.ui.h:4
 msgid "jvm maximum heap size"
 msgstr ""
 
-#: resources/Launcher.ui.h:6
+#: resources/Launcher.ui.h:5
 msgid "proxy host"
 msgstr ""
 
-#: resources/Launcher.ui.h:7
+#: resources/Launcher.ui.h:6
 msgid "jvm initial heap size"
 msgstr ""
 
-#: resources/Launcher.ui.h:8
+#: resources/Launcher.ui.h:7
 msgid "release xmage install path"
 msgstr ""
 
-#: resources/Launcher.ui.h:9
+#: resources/Launcher.ui.h:8
 msgid "beta xmage install path"
 msgstr ""
 
-#: resources/Launcher.ui.h:10
+#: resources/Launcher.ui.h:9
 msgid "update source"
 msgstr ""
 
-#: resources/Launcher.ui.h:11
+#: resources/Launcher.ui.h:10
 msgid "XmageLauncher"
 msgstr ""
 
-#: resources/Launcher.ui.h:12
+#: resources/Launcher.ui.h:11
 msgid "LauncherClient"
 msgstr ""
 
-#: resources/Launcher.ui.h:13
+#: resources/Launcher.ui.h:12
 msgid "LauncherServer"
 msgstr ""
 
-#: resources/Launcher.ui.h:14
+#: resources/Launcher.ui.h:13
 msgid "LauncherXmage"
 msgstr ""
 
-#: resources/Launcher.ui.h:15
+#: resources/Launcher.ui.h:14
 msgid "checkupdate"
 msgstr ""
 
-#: resources/Launcher.ui.h:16
+#: resources/Launcher.ui.h:15
 msgid "0/0"
 msgstr ""
 
-#: src/launcher.cpp:257
+#: src/launcher.cpp:143
+msgid "close menu"
+msgstr ""
+
+#: src/launcher.cpp:264
 msgid "check update"
 msgstr ""
 
-#: src/launcher.cpp:276
+#: src/launcher.cpp:283
 #, c-format
 msgid "last xmage version:'%s',download url:'%s'."
 msgstr ""
 
-#: src/launcher.cpp:279
+#: src/launcher.cpp:286
 msgid "exist new xmage,now download."
 msgstr ""
 
-#: src/launcher.cpp:283
+#: src/launcher.cpp:290
 msgid "no need to update"
 msgstr ""
 
-#: src/launcher.cpp:292
+#: src/launcher.cpp:299
 msgid " download update"
 msgstr ""
 
-#: src/launcher.cpp:310
+#: src/launcher.cpp:317
 msgid "download success,install..."
 msgstr ""
 
-#: src/launcher.cpp:315
+#: src/launcher.cpp:322
 msgid "download failure"
 msgstr ""
 
-#: src/launcher.cpp:326
+#: src/launcher.cpp:333
 msgid "using local installation package"
 msgstr ""
 
-#: src/launcher.cpp:331
+#: src/launcher.cpp:338
 msgid "install update"
 msgstr ""
 
-#: src/launcher.cpp:338
+#: src/launcher.cpp:345
 msgid "install success"
 msgstr ""
