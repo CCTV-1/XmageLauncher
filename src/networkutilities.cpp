@@ -82,8 +82,14 @@ static xmage_desc_t get_last_release_version( void ) noexcept( false )
     //    ... unimportant ...
     //    "assets": [
     //        {
+    //            "name": "mage_1.4.35V0"
     //            ... unimportant ...
     //            "browser_download_url": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V0/xmage_1.4.35V0.zip"
+    //        }
+    //        {
+    //            "name": "mage_1.4.35V0a"
+    //            ... unimportant ...
+    //            "browser_download_url": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V0/xmage_1.4.35V0a.zip"
     //        }
     //    ],
     //    ... unimportant ...
@@ -137,15 +143,6 @@ static xmage_desc_t get_last_release_version( void ) noexcept( false )
         throw std::invalid_argument( except_message );
     }
 
-    json_t * version_name = json_object_get( root.get() , "name" );
-    if ( json_is_string( version_name )  == false )
-    {
-        except_message += ":network json:'";
-        except_message += json_buff.buff;
-        except_message += "' node 'name' format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
-
     json_t * assets_array = json_object_get( root.get() , "assets" );
     if ( json_is_array( assets_array )  == false )
     {
@@ -154,8 +151,8 @@ static xmage_desc_t get_last_release_version( void ) noexcept( false )
         except_message += "' node 'assets' format does not meet expectations";
         throw std::invalid_argument( except_message );
     }
-
-    json_t * last_assets = json_array_get( assets_array , 0 );
+    //last version:V0 V0a V0b ... 0Vz,json_array_size( assets_array ) ->C array index style
+    json_t * last_assets = json_array_get( assets_array , json_array_size( assets_array ) - 1 );
     if ( json_is_object( last_assets ) == false )
     {
         except_message += ":network json:'";
@@ -172,6 +169,14 @@ static xmage_desc_t get_last_release_version( void ) noexcept( false )
         std::shared_ptr<char> jsons( json_dumps( last_assets , JSON_INDENT( 4 ) ) , free );
         except_message += jsons.get();
         except_message += "' format does not meet expectations";
+        throw std::invalid_argument( except_message );
+    }
+    json_t * version_name = json_object_get( last_assets , "name" );
+    if ( json_is_string( version_name )  == false )
+    {
+        except_message += ":network json:'";
+        except_message += json_buff.buff;
+        except_message += "' node 'name' format does not meet expectations";
         throw std::invalid_argument( except_message );
     }
 
