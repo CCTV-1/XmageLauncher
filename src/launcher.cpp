@@ -273,10 +273,10 @@ int main ( int argc , char * argv[] )
                 else
                     local_version = config.get_beta_mage_version();
 
-                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "last xmage version:'%s',download url:'%s'." , xmage_desc.version_name.c_str() , xmage_desc.download_url.c_str() );
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , _( "last xmage version:'%s',download url:'%s'." ) , xmage_desc.version_name.c_str() , xmage_desc.download_url.c_str() );
                 if ( xmage_desc.version_name.compare( local_version ) )
                 {
-                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , "exist new xmage,now download." );
+                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , _( "exist new xmage,now download." ) );
                 }
                 else
                 {
@@ -323,7 +323,7 @@ int main ( int argc , char * argv[] )
                         }
                         else
                         {
-                            g_log( __func__ , G_LOG_LEVEL_MESSAGE , "using local installation package" );
+                            g_log( __func__ , G_LOG_LEVEL_MESSAGE , _( "using local installation package" ) );
                         }
 
                         progrees_bar->set_fraction( 0 );

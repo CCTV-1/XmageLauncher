@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-05-05 11:57+0800\n"
+"POT-Creation-Date: 2019-05-05 13:34+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -85,6 +85,15 @@ msgstr ""
 msgid "check update"
 msgstr ""
 
+#: src/launcher.cpp:276
+#, c-format
+msgid "last xmage version:'%s',download url:'%s'."
+msgstr ""
+
+#: src/launcher.cpp:279
+msgid "exist new xmage,now download."
+msgstr ""
+
 #: src/launcher.cpp:283
 msgid "no need to update"
 msgstr ""
@@ -99,6 +108,10 @@ msgstr ""
 
 #: src/launcher.cpp:315
 msgid "download failure"
+msgstr ""
+
+#: src/launcher.cpp:326
+msgid "using local installation package"
 msgstr ""
 
 #: src/launcher.cpp:331
