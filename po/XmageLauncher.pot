@@ -1,0 +1,110 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-05-05 11:57+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: resources/Launcher.ui.h:1
+msgid "Setting"
+msgstr ""
+
+#: resources/Launcher.ui.h:2
+msgid "Apply"
+msgstr ""
+
+#: resources/Launcher.ui.h:3
+msgid "proxy type"
+msgstr ""
+
+#: resources/Launcher.ui.h:4
+msgid "proxy port"
+msgstr ""
+
+#: resources/Launcher.ui.h:5
+msgid "jvm maximum heap size"
+msgstr ""
+
+#: resources/Launcher.ui.h:6
+msgid "proxy host"
+msgstr ""
+
+#: resources/Launcher.ui.h:7
+msgid "jvm initial heap size"
+msgstr ""
+
+#: resources/Launcher.ui.h:8
+msgid "release xmage install path"
+msgstr ""
+
+#: resources/Launcher.ui.h:9
+msgid "beta xmage install path"
+msgstr ""
+
+#: resources/Launcher.ui.h:10
+msgid "update source"
+msgstr ""
+
+#: resources/Launcher.ui.h:11
+msgid "XmageLauncher"
+msgstr ""
+
+#: resources/Launcher.ui.h:12
+msgid "LauncherClient"
+msgstr ""
+
+#: resources/Launcher.ui.h:13
+msgid "LauncherServer"
+msgstr ""
+
+#: resources/Launcher.ui.h:14
+msgid "LauncherXmage"
+msgstr ""
+
+#: resources/Launcher.ui.h:15
+msgid "checkupdate"
+msgstr ""
+
+#: resources/Launcher.ui.h:16
+msgid "0/0"
+msgstr ""
+
+#: src/launcher.cpp:257
+msgid "check update"
+msgstr ""
+
+#: src/launcher.cpp:283
+msgid "no need to update"
+msgstr ""
+
+#: src/launcher.cpp:292
+msgid " download update"
+msgstr ""
+
+#: src/launcher.cpp:310
+msgid "download success,install..."
+msgstr ""
+
+#: src/launcher.cpp:315
+msgid "download failure"
+msgstr ""
+
+#: src/launcher.cpp:331
+msgid "install update"
+msgstr ""
+
+#: src/launcher.cpp:338
+msgid "install success"
+msgstr ""

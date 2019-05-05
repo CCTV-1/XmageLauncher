@@ -6,6 +6,7 @@
 #include <curl/curl.h>
 #include <jansson.h>
 #include <gtkmm.h>
+#include <glibmm/i18n.h>
 
 #include "commontype.h"
 #include "networkutilities.h"
@@ -64,7 +65,6 @@ bool launch_server( config_t& config , XmageType type )
     return true;
 }
 
-//read/apply config
 auto& launcher_initial( void )
 {
     json_set_alloc_funcs( malloc , free );
@@ -84,6 +84,9 @@ void launcher_cleanup( void )
 
 int main ( int argc , char * argv[] )
 {
+    bindtextdomain( "XmageLauncher" , "locale/" );
+    bind_textdomain_codeset( "XmageLauncher" , "UTF-8" );
+    textdomain( "XmageLauncher" );
     auto& config = launcher_initial();
     
     if ( config.get_using_proxy() )
@@ -106,7 +109,7 @@ int main ( int argc , char * argv[] )
     client_button->signal_clicked().connect(
         [ &config ]()
         {
-            launch_client( config , XmageType::Release );
+            launch_client( config , config.get_update_source() );
         }
     );
     Gtk::Button * server_button;
@@ -114,7 +117,7 @@ int main ( int argc , char * argv[] )
     server_button->signal_clicked().connect(
         [ &config ]()
         {
-            launch_server( config , XmageType::Release );
+            launch_server( config , config.get_update_source() );
         }
     );
     Gtk::Button * xmage_button;
@@ -122,8 +125,8 @@ int main ( int argc , char * argv[] )
     xmage_button->signal_clicked().connect(
         [ &config ]()
         {
-            launch_client( config , XmageType::Release );
-            launch_server( config , XmageType::Release );
+            launch_client( config , config.get_update_source() );
+            launch_server( config , config.get_update_source() );
         }
     );
     //main window progress
@@ -133,10 +136,10 @@ int main ( int argc , char * argv[] )
     builder->get_widget( "ProgressTarget" , progrees_target );
     Gtk::Label * progrees_value;
     builder->get_widget( "ProgressValue" , progrees_value );
+
+    //Setting menu dialog
     Gtk::Dialog * setting_dialog;
     builder->get_widget( "SettingDialog" , setting_dialog );
-
-
     Gtk::Button * setting_button;
     builder->get_widget( "SettingButton" , setting_button );
     setting_button->signal_clicked().connect(
@@ -145,8 +148,6 @@ int main ( int argc , char * argv[] )
             setting_dialog->run();
         }
     );
-
-    //Setting menu dialog
     Gtk::ComboBox * proxy_type;
     builder->get_widget( "ProxyType" , proxy_type );
     if ( config.get_using_proxy() )
@@ -253,7 +254,7 @@ int main ( int argc , char * argv[] )
             std::future_status desc_status = desc.wait_for( std::chrono::microseconds( 20 ) );
             if ( desc_status == std::future_status::ready )
             {
-                progrees_target->set_label( "check update" );
+                progrees_target->set_label( _( "check update" ) );
                 xmage_desc_t xmage_desc;
                 try
                 {
@@ -265,15 +266,21 @@ int main ( int argc , char * argv[] )
                     g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , e.what() );
                     return false;
                 }
-                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "installed xmage version:'%s'." , config.get_release_version().c_str() );
+
+                Glib::ustring local_version;
+                if ( config.get_update_source() == XmageType::Release )
+                    local_version = config.get_release_version();
+                else
+                    local_version = config.get_beta_mage_version();
+
                 g_log( __func__ , G_LOG_LEVEL_MESSAGE , "last xmage version:'%s',download url:'%s'." , xmage_desc.version_name.c_str() , xmage_desc.download_url.c_str() );
-                if ( xmage_desc.version_name.compare( config.get_release_version() ) )
+                if ( xmage_desc.version_name.compare( local_version ) )
                 {
                     g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , "exist new xmage,now download." );
                 }
                 else
                 {
-                    progrees_target->set_label( "no need to update" );
+                    progrees_target->set_label( _( "no need to update" ) );
                     return false;
                 }
 
@@ -282,11 +289,11 @@ int main ( int argc , char * argv[] )
                 if ( std::filesystem::is_regular_file( get_installation_package_name( xmage_desc ).raw() ) == false )
                 {
                     download_status = download_xmage( xmage_desc , download_desc_ptr );
+                    progrees_target->set_label( _(" download update" ) );
                 }
                 Glib::signal_timeout().connect(
                     [ xmage_desc , download_status , progrees_bar , progrees_target , progrees_value , download_desc_ptr , &config ]()
                     {
-                        progrees_target->set_label( "download update" );
                         //may continue download
                         if ( download_status.valid() )
                         {
@@ -300,12 +307,12 @@ int main ( int argc , char * argv[] )
                             {
                                 if ( download_status.get() )
                                 {
-                                    progrees_target->set_label( "download success,install..." );
+                                    progrees_target->set_label( _( "download success,install..." ) );
                                     std::filesystem::rename( get_download_temp_name( xmage_desc ).raw() , get_installation_package_name( xmage_desc ).raw() );
                                 }
                                 else
                                 {
-                                    progrees_target->set_label( "download failure" );
+                                    progrees_target->set_label( _( "download failure" ) );
                                     return false;
                                 }
                             }
@@ -320,23 +327,21 @@ int main ( int argc , char * argv[] )
                         }
 
                         progrees_bar->set_fraction( 0 );
-                        progrees_value->set_label( "" );
                         auto unzip_future = unzip_client( get_installation_package_name( xmage_desc ) ,  config.get_release_path() );
+                        progrees_target->set_label( _( "install update" ) );
                         Glib::signal_timeout().connect(
                             [ progrees_target , xmage_desc , unzip_future , &config ]()
                             {
-                                progrees_target->set_label( "install update" );
                                 std::future_status unzip_status = unzip_future.wait_for( std::chrono::microseconds( 20 ) );
                                 if ( unzip_status == std::future_status::ready )
                                 {
-                                    progrees_target->set_label( "install success" );
+                                    progrees_target->set_label( _( "install success" ) );
                                     config.set_release_version( xmage_desc.version_name );
                                     return false;
                                 }
                                 return true;
                             } , 100
                         );
-
                         return false;
                     } , 100
                 );

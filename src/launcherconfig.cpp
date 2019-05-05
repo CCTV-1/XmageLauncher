@@ -13,45 +13,40 @@ LauncherConfig::LauncherConfig()
     }
     catch( const Glib::FileError& e )
     {
-        //config file don't exitst,fill default value.
-        //if don't first get_type then set_type,keyfile don't exists key,throw Glib::KeyFileError.
-        //config.ini content like:
-        //[Beta]
-        //version=1.4.35.dev_2019-04-28_20-43
-        //installed_path=BetaXmage
-        //[Release]
-        //version=xmage_1.4.35V2
-        //installed_path=ReleaseXmage
-        //[Setting]
-        //using_proxy=false
-        //proxy_scheme=http
-        //proxy_host=localhost
-        //proxy_port=1080
-        //jvm_xms=256
-        //jvm_xmx=1024
-        this->config_file.get_string( "Beta" , "version" );
-        this->config_file.set_string( "Beta" , "version" , "1.4.35.dev_2019-04-28_20-43" );
-        this->config_file.get_string( "Beta" , "installed_path" );
-        this->config_file.set_string( "Beta" , "installed_path" , "BetaXmage" );
-        this->config_file.get_string( "Release" , "version" );
-        this->config_file.set_string( "Release" , "version" , "xmage_1.4.35V2" );
-        this->config_file.get_string( "Release" , "installed_path" );
-        this->config_file.set_string( "Release" , "installed_path" , "ReleaseXmage" );
-        this->config_file.get_boolean( "Setting" , "using_proxy" );
-        this->config_file.set_boolean( "Setting" , "using_proxy" , false );
-        this->config_file.get_string( "Setting" , "proxy_scheme" );
-        this->config_file.set_string( "Setting" , "proxy_scheme" , "http" );
-        this->config_file.get_string( "Setting" , "proxy_host" );
-        this->config_file.set_string( "Setting" , "proxy_host" , "localhost" );
-        this->config_file.get_integer( "Setting" , "proxy_port" );
-        this->config_file.set_integer( "Setting" , "proxy_port" , 1080 );
-        this->config_file.get_integer( "Setting" , "jvm_xms" );
-        this->config_file.set_integer( "Setting" , "jvm_xms" , 256 );
-        this->config_file.get_integer( "Setting" , "jvm_xmx" );
-        this->config_file.set_integer( "Setting" , "jvm_xmx" , 1024 );
-        this->config_file.get_integer( "Setting" , "update_source" );
-        this->config_file.set_integer( "Setting" , "update_source" , static_cast<int>( XmageType::Release ) );
-        g_log( __func__ , G_LOG_LEVEL_MESSAGE , "Glib::FileError code:%d" , e.code() );
+        if ( e.code() == Glib::FileError::NO_SUCH_ENTITY )
+        {
+            //config file don't exists,fill default value.
+            //config.ini content like:
+            //[Beta]
+            //version=1.4.35.dev_2019-04-28_20-43
+            //installed_path=BetaXmage
+            //[Release]
+            //version=xmage_1.4.35V2
+            //installed_path=ReleaseXmage
+            //[Setting]
+            //using_proxy=false
+            //proxy_scheme=http
+            //proxy_host=localhost
+            //proxy_port=1080
+            //jvm_xms=256
+            //jvm_xmx=1024
+            this->config_file.set_string( "Beta" , "version" , "1.4.35.dev_2019-04-28_20-43" );
+            this->config_file.set_string( "Beta" , "installed_path" , "BetaXmage" );
+            this->config_file.set_string( "Release" , "version" , "xmage_1.4.35V2" );
+            this->config_file.set_string( "Release" , "installed_path" , "ReleaseXmage" );
+            this->config_file.set_boolean( "Setting" , "using_proxy" , false );
+            this->config_file.set_string( "Setting" , "proxy_scheme" , "http" );
+            this->config_file.set_string( "Setting" , "proxy_host" , "localhost" );
+            this->config_file.set_integer( "Setting" , "proxy_port" , 1080 );
+            this->config_file.set_integer( "Setting" , "jvm_xms" , 256 );
+            this->config_file.set_integer( "Setting" , "jvm_xmx" , 1024 );
+            this->config_file.set_integer( "Setting" , "update_source" , static_cast<int>( XmageType::Release ) );
+        }
+        else
+        {
+            g_log( __func__ , G_LOG_LEVEL_MESSAGE , "Glib::FileError code:%d" , e.code() );
+        }
+        
     }
     catch( const Glib::KeyFileError& e )
     {

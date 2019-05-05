@@ -30,5 +30,17 @@ networkutilities.o: src/networkutilities.cpp src/networkutilities.h
 	$(CC) src/networkutilities.cpp $(FLAGS) $(GLIBMM_FLAGS) $(CURL_FLAGS) -c -o networkutilities.o
 src/launcher-resources.cpp: resources/resources.xml $(shell $(GLIB_COMPILE_RESOURCES) --generate-dependencies resources/resources.xml)
 	$(GLIB_COMPILE_RESOURCES) --generate-source resources/resources.xml --target=src/launcher-resources.cpp
+LANGUAGE:po/zh_CN.po po/en_US.po
+	msgfmt --output-file=locale/zh_CN/LC_MESSAGES/XmageLauncher.mo po/zh_CN.po
+	msgfmt --output-file=locale/en_US/LC_MESSAGES/XmageLauncher.mo po/en_US.po
+po/en_US.po: po/XmageLauncher.pot
+	msginit --input=po/XmageLauncher.pot --locale=en_US --output=po/en_US.po
+po/zh_CN.po: po/XmageLauncher.pot
+	msginit --input=po/XmageLauncher.pot --locale=zh_CN --output=po/zh_CN.po
+resources/Launcher.ui.h: resources/Launcher.ui
+	intltool-extract --type=gettext/glade resources/Launcher.ui
+po/XmageLauncher.pot: resources/Launcher.ui.h src/launcher.cpp
+	xgettext --language=C++ --keyword=_ --keyword=N_ --output=po/XmageLauncher.pot resources/Launcher.ui.h src/launcher.cpp
 clean:
-	-rm launcher src/launcher-resources.cpp fileutilities.o networkutilities.o
+	-rm launcher src/launcher-resources.cpp fileutilities.o networkutilities.o resources/Launcher.ui.h\
+	po/XmageLauncher.pot po/zh_CN.po po/en_US.po locale/zh_CN/LC_MESSAGES/XmageLauncher.mo locale/en_US/LC_MESSAGES/XmageLauncher.mo

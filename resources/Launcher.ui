@@ -25,25 +25,25 @@
     </columns>
     <data>
       <row>
-        <col id="0" translatable="yes">None</col>
+        <col id="0" translatable="no">None</col>
       </row>
       <row>
-        <col id="0" translatable="yes">HTTP</col>
+        <col id="0" translatable="no">HTTP</col>
       </row>
       <row>
-        <col id="0" translatable="yes">HTTPS</col>
+        <col id="0" translatable="no">HTTPS</col>
       </row>
       <row>
-        <col id="0" translatable="yes">SOCKS4</col>
+        <col id="0" translatable="no">SOCKS4</col>
       </row>
       <row>
-        <col id="0" translatable="yes">SOCKS4A</col>
+        <col id="0" translatable="no">SOCKS4A</col>
       </row>
       <row>
-        <col id="0" translatable="yes">SOCKS5</col>
+        <col id="0" translatable="no">SOCKS5</col>
       </row>
       <row>
-        <col id="0" translatable="yes">SOCKS5H</col>
+        <col id="0" translatable="no">SOCKS5H</col>
       </row>
     </data>
   </object>
@@ -54,10 +54,10 @@
     </columns>
     <data>
       <row>
-        <col id="0" translatable="yes">Release</col>
+        <col id="0">Release</col>
       </row>
       <row>
-        <col id="0" translatable="yes">Beta</col>
+        <col id="0">Beta</col>
       </row>
     </data>
   </object>
@@ -257,7 +257,7 @@
                           <object class="GtkEntry" id="ProxyHost">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="text" translatable="yes">localhost</property>
+                            <property name="text" translatable="no">localhost</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>

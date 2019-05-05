@@ -1,0 +1,110 @@
+# Chinese translations for PACKAGE package
+# PACKAGE �������ļ������ķ���.
+# Copyright (C) 2019 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# <EMAIL@ADDRESS>, 2019.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-05-05 11:57+0800\n"
+"PO-Revision-Date: 2019-05-05 11:57+0800\n"
+"Last-Translator: <EMAIL@ADDRESS>\n"
+"Language-Team: Chinese (simplified)\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: resources/Launcher.ui.h:1
+msgid "Setting"
+msgstr "设置"
+
+#: resources/Launcher.ui.h:2
+msgid "Apply"
+msgstr "应用更改"
+
+#: resources/Launcher.ui.h:3
+msgid "proxy type"
+msgstr "代理类型"
+
+#: resources/Launcher.ui.h:4
+msgid "proxy port"
+msgstr "代理端口"
+
+#: resources/Launcher.ui.h:5
+msgid "jvm maximum heap size"
+msgstr "Xmage最大占用内存"
+
+#: resources/Launcher.ui.h:6
+msgid "proxy host"
+msgstr "代理主机"
+
+#: resources/Launcher.ui.h:7
+msgid "jvm initial heap size"
+msgstr "Xmage初始占用内存"
+
+#: resources/Launcher.ui.h:8
+msgid "release xmage install path"
+msgstr "发布版Xmage安装目录"
+
+#: resources/Launcher.ui.h:9
+msgid "beta xmage install path"
+msgstr "测试版Xmage安装目录"
+
+#: resources/Launcher.ui.h:10
+msgid "update source"
+msgstr "更新源"
+
+#: resources/Launcher.ui.h:11
+msgid "XmageLauncher"
+msgstr "Xmage启动器"
+
+#: resources/Launcher.ui.h:12
+msgid "LauncherClient"
+msgstr "启动客户端"
+
+#: resources/Launcher.ui.h:13
+msgid "LauncherServer"
+msgstr "启动服务端"
+
+#: resources/Launcher.ui.h:14
+msgid "LauncherXmage"
+msgstr "启动Xmage"
+
+#: resources/Launcher.ui.h:15
+msgid "checkupdate"
+msgstr "检查更新"
+
+#: resources/Launcher.ui.h:16
+msgid "0/0"
+msgstr "未知进度"
+
+#: src/launcher.cpp:257
+msgid "check update"
+msgstr "检查更新"
+
+#: src/launcher.cpp:283
+msgid "no need to update"
+msgstr "不需要更新"
+
+#: src/launcher.cpp:292
+msgid " download update"
+msgstr "下载更新"
+
+#: src/launcher.cpp:310
+msgid "download success,install..."
+msgstr "下载成功,安装中"
+
+#: src/launcher.cpp:315
+msgid "download failure"
+msgstr "下载失败"
+
+#: src/launcher.cpp:331
+msgid "install update"
+msgstr "安装更新"
+
+#: src/launcher.cpp:338
+msgid "install success"
+msgstr "安装成功"
