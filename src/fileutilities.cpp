@@ -12,7 +12,7 @@
 
 #include "fileutilities.h"
 
-static void unzip_client_callback( Glib::ustring client_zip_name , Glib::ustring unzip_path ) noexcept( false )
+static void install_xmage_callback( Glib::ustring client_zip_name , Glib::ustring unzip_path ) noexcept( false )
 {
     std::filesystem::path client_zip( client_zip_name.raw() );
     std::filesystem::path unzip_dir( unzip_path.raw() );
@@ -70,9 +70,9 @@ static void unzip_client_callback( Glib::ustring client_zip_name , Glib::ustring
     }
 }
 
-std::shared_future<void> unzip_client( Glib::ustring client_zip_name , Glib::ustring unzip_path ) noexcept( false )
+std::shared_future<void> install_xmage( Glib::ustring client_zip_name , Glib::ustring unzip_path ) noexcept( false )
 {
-    std::packaged_task<void()> task( std::bind( unzip_client_callback , client_zip_name , unzip_path ) );
+    std::packaged_task<void()> task( std::bind( install_xmage_callback , client_zip_name , unzip_path ) );
     std::shared_future<void> unzip_future = task.get_future();
     std::thread( std::move(task) ).detach();
 

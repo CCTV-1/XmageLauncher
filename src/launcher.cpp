@@ -334,16 +334,17 @@ int main ( int argc , char * argv[] )
                         }
 
                         progrees_bar->set_fraction( 0 );
-                        auto unzip_future = unzip_client( get_installation_package_name( xmage_desc ) ,  config.get_release_path() );
+                        auto install_future = install_xmage( get_installation_package_name( xmage_desc ) ,  config.get_release_path() );
                         progrees_target->set_label( _( "install update" ) );
                         Glib::signal_timeout().connect(
-                            [ progrees_target , xmage_desc , unzip_future , &config ]()
+                            [ progrees_target , xmage_desc , install_future , &config ]()
                             {
-                                std::future_status unzip_status = unzip_future.wait_for( std::chrono::microseconds( 20 ) );
-                                if ( unzip_status == std::future_status::ready )
+                                std::future_status install_status = install_future.wait_for( std::chrono::microseconds( 20 ) );
+                                if ( install_status == std::future_status::ready )
                                 {
                                     progrees_target->set_label( _( "install success" ) );
                                     config.set_release_version( xmage_desc.version_name );
+                                    std::filesystem::remove( get_installation_package_name( xmage_desc ).raw() );
                                     return false;
                                 }
                                 return true;
