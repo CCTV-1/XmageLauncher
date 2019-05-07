@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-05-07 16:39+0800\n"
+"POT-Creation-Date: 2019-05-07 18:48+0800\n"
 "PO-Revision-Date: 2019-05-05 22:48+0800\n"
 "Last-Translator: <EMAIL@ADDRESS>\n"
 "Language-Team: English\n"
@@ -106,15 +106,20 @@ msgstr "download failure"
 msgid "using local installation package"
 msgstr "using local installation package"
 
-#: src/launcher.cpp:149
+#: src/launcher.cpp:148
 msgid "install update"
 msgstr "install update"
 
-#: src/launcher.cpp:151
+#: src/launcher.cpp:152
+#, fuzzy
+msgid "install faliure"
+msgstr "install update"
+
+#: src/launcher.cpp:155
 msgid "install success"
 msgstr "install success"
 
-#: src/launcher.cpp:211
+#: src/launcher.cpp:215
 msgid "close menu"
 msgstr "close menu"
 

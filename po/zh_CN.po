@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-05-07 16:39+0800\n"
+"POT-Creation-Date: 2019-05-07 18:48+0800\n"
 "PO-Revision-Date: 2019-05-05 11:57+0800\n"
 "Last-Translator: <EMAIL@ADDRESS>\n"
 "Language-Team: Chinese (simplified)\n"
@@ -106,15 +106,19 @@ msgstr "下载失败"
 msgid "using local installation package"
 msgstr "使用本地安装包"
 
-#: src/launcher.cpp:149
+#: src/launcher.cpp:148
 msgid "install update"
 msgstr "安装更新"
 
-#: src/launcher.cpp:151
+#: src/launcher.cpp:152
+msgid "install faliure"
+msgstr "安装失败"
+
+#: src/launcher.cpp:155
 msgid "install success"
 msgstr "安装成功"
 
-#: src/launcher.cpp:211
+#: src/launcher.cpp:215
 msgid "close menu"
 msgstr "关闭菜单"
 
