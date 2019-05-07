@@ -138,11 +138,11 @@ void update_xmage_callback( config_t& config , XmageType type , progress_t * pro
     Glib::ustring install_path;
     if ( type == XmageType::Release )
     {
-        version = config.get_release_path();
+        install_path = config.get_release_path();
     }
     else
     {
-        version = config.get_beta_path();
+        install_path = config.get_beta_path();
     }
     auto install_future = install_xmage( get_installation_package_name( update_desc ) ,  install_path , progress );
     progress_label->set_label( _( "install update" ) );
