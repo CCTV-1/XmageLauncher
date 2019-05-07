@@ -49,7 +49,7 @@ Glib::ustring LauncherConfig::get_java_path()
 }
 Glib::ustring LauncherConfig::get_beta_version()
 {
-    if ( this->config_file.has_key( "Beta" , "version" ) == false )
+    if ( !this->config_file.has_group( "Beta" ) || !this->config_file.has_key( "Beta" , "version" ) )
     {
         this->config_file.set_string( "Beta" , "version" , "1.4.35.dev_2019-04-28_20-43" );
     }
@@ -57,7 +57,7 @@ Glib::ustring LauncherConfig::get_beta_version()
 }
 Glib::ustring LauncherConfig::get_beta_path()
 {
-    if ( this->config_file.has_key( "Beta" , "installed_path" ) == false )
+    if ( !this->config_file.has_group( "Beta" ) || !this->config_file.has_key( "Beta" , "installed_path" ) )
     {
         this->config_file.set_string( "Beta" , "installed_path" , "BetaXmage" );
     }
@@ -65,7 +65,7 @@ Glib::ustring LauncherConfig::get_beta_path()
 }
 Glib::ustring LauncherConfig::get_release_version()
 {
-    if ( this->config_file.has_key( "Release" , "version" ) == false )
+    if ( !this->config_file.has_group( "Release" ) || !this->config_file.has_key( "Release" , "version" ) )
     {
         this->config_file.set_string( "Release" , "version" , "xmage_1.4.35V2" );
     }
@@ -73,7 +73,7 @@ Glib::ustring LauncherConfig::get_release_version()
 }
 Glib::ustring LauncherConfig::get_release_path()
 {
-    if ( this->config_file.has_key( "Release" , "installed_path" ) == false )
+    if ( !this->config_file.has_group( "Release" ) || !this->config_file.has_key( "Release" , "installed_path" ) )
     {
         this->config_file.set_string( "Release" , "installed_path" , "ReleaseXmage" );
     }
@@ -81,7 +81,7 @@ Glib::ustring LauncherConfig::get_release_path()
 }
 bool LauncherConfig::get_using_proxy()
 {
-    if ( this->config_file.has_key( "Setting" , "using_proxy" ) == false )
+    if ( !this->config_file.has_group( "Setting" ) || !this->config_file.has_key( "Setting" , "using_proxy" ) )
     {
         this->config_file.set_boolean( "Setting" , "using_proxy" , false );
     }
@@ -89,7 +89,7 @@ bool LauncherConfig::get_using_proxy()
 }
 Glib::ustring LauncherConfig::get_proxy_scheme()
 {
-    if ( this->config_file.has_key( "Setting" , "proxy_scheme" ) == false )
+    if ( !this->config_file.has_group( "Setting" ) || !this->config_file.has_key( "Setting" , "proxy_scheme" ) )
     {
         this->config_file.set_string( "Setting" , "proxy_scheme" , "http" );
     }
@@ -97,7 +97,7 @@ Glib::ustring LauncherConfig::get_proxy_scheme()
 }
 Glib::ustring LauncherConfig::get_proxy_host()
 {
-    if ( this->config_file.has_key( "Setting" , "proxy_host" ) == false )
+    if ( !this->config_file.has_group( "Setting" ) || !this->config_file.has_key( "Setting" , "proxy_host" ) )
     {
         this->config_file.set_string( "Setting" , "proxy_host" , "localhost" );
     }
@@ -105,7 +105,7 @@ Glib::ustring LauncherConfig::get_proxy_host()
 }
 std::uint32_t LauncherConfig::get_proxy_port()
 {
-    if ( this->config_file.has_key( "Setting" , "proxy_port" ) == false )
+    if ( !this->config_file.has_group( "Setting" ) || !this->config_file.has_key( "Setting" , "proxy_port" ) )
     {
         this->config_file.set_integer( "Setting" , "proxy_port" , 1080 );
     }
@@ -113,7 +113,7 @@ std::uint32_t LauncherConfig::get_proxy_port()
 }
 std::uint32_t LauncherConfig::get_jvm_xms()
 {
-    if ( this->config_file.has_key( "Setting" , "jvm_xms" ) == false )
+    if ( !this->config_file.has_group( "Setting" ) || !this->config_file.has_key( "Setting" , "jvm_xms" ) )
     {
         this->config_file.set_integer( "Setting" , "jvm_xms" , 256 );
     }
@@ -121,7 +121,7 @@ std::uint32_t LauncherConfig::get_jvm_xms()
 }
 std::uint32_t LauncherConfig::get_jvm_xmx()
 {
-    if ( this->config_file.has_key( "Setting" , "jvm_xmx" ) == false )
+    if ( !this->config_file.has_group( "Setting" ) || !this->config_file.has_key( "Setting" , "jvm_xmx" ) )
     {
         this->config_file.set_integer( "Setting" , "jvm_xmx" , 1024 );
     }
@@ -129,7 +129,7 @@ std::uint32_t LauncherConfig::get_jvm_xmx()
 }
 XmageType LauncherConfig::get_active_xmage()
 {
-    if ( this->config_file.has_key( "Setting" , "active_xmage" ) == false )
+    if ( !this->config_file.has_group( "Setting" ) || !this->config_file.has_key( "Setting" , "active_xmage" ) )
     {
         this->config_file.set_integer( "Setting" , "active_xmage" , static_cast<int>( XmageType::Release ) );
     }
