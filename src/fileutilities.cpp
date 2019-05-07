@@ -79,7 +79,7 @@ static bool install_xmage_callback( Glib::ustring client_zip_name , Glib::ustrin
             g_log( __func__ , G_LOG_LEVEL_MESSAGE , "file name:'%s/%s' encoding not supported" , unzip_path.c_str() , file_stat.name );
         }
 
-        *( progress->now ) = i;
+        *( progress->now ) = i + 1;
         progress->progress_dispatcher->emit();
     }
 
