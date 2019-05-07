@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-05-05 22:48+0800\n"
+"POT-Creation-Date: 2019-05-07 16:39+0800\n"
 "PO-Revision-Date: 2019-05-05 22:48+0800\n"
 "Last-Translator: <EMAIL@ADDRESS>\n"
 "Language-Team: English\n"
@@ -77,47 +77,46 @@ msgstr "checkupdate"
 msgid "0/0"
 msgstr "0/0"
 
-#: src/launcher.cpp:143
-msgid "close menu"
-msgstr "close menu"
-
-#: src/launcher.cpp:264
-msgid "check update"
-msgstr "check update"
-
-#: src/launcher.cpp:283
+#: src/launcher.cpp:105
 #, c-format
 msgid "last xmage version:'%s',download url:'%s'."
 msgstr "last xmage version:'%s',download url:'%s'."
 
-#: src/launcher.cpp:286
+#: src/launcher.cpp:108
 msgid "exist new xmage,now download."
 msgstr "exist new xmage,now download."
 
-#: src/launcher.cpp:290
+#: src/launcher.cpp:112
 msgid "no need to update"
 msgstr "no need to update"
 
-#: src/launcher.cpp:299
+#: src/launcher.cpp:121
 msgid " download update"
 msgstr " download update"
 
-#: src/launcher.cpp:317
+#: src/launcher.cpp:125
 msgid "download success,install..."
 msgstr "download success,install..."
 
-#: src/launcher.cpp:322
+#: src/launcher.cpp:130
 msgid "download failure"
 msgstr "download failure"
 
-#: src/launcher.cpp:333
+#: src/launcher.cpp:136
 msgid "using local installation package"
 msgstr "using local installation package"
 
-#: src/launcher.cpp:338
+#: src/launcher.cpp:149
 msgid "install update"
 msgstr "install update"
 
-#: src/launcher.cpp:345
+#: src/launcher.cpp:151
 msgid "install success"
 msgstr "install success"
+
+#: src/launcher.cpp:211
+msgid "close menu"
+msgstr "close menu"
+
+#~ msgid "check update"
+#~ msgstr "check update"
