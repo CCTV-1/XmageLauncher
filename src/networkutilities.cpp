@@ -35,12 +35,12 @@ static int download_description_callback( void * client_ptr , curl_off_t dltotal
     if ( client_ptr == nullptr )
         return 0;
     progress_t * download_desc = static_cast<progress_t *>( client_ptr );
-    if ( download_desc->dlnow == nullptr )
+    if ( download_desc->now == nullptr )
         return 0;
-    if ( download_desc->dltotal == nullptr )
+    if ( download_desc->total == nullptr )
         return 0;
-    *( download_desc->dlnow ) = dlnow;
-    *( download_desc->dltotal ) = dltotal;
+    *( download_desc->now ) = dlnow;
+    *( download_desc->total ) = dltotal;
     //notify progress update
     download_desc->progress_dispatcher->emit();
 

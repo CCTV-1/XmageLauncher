@@ -144,9 +144,14 @@ void update_xmage_callback( config_t& config , XmageType type , progress_t * pro
     {
         version = config.get_beta_path();
     }
-    auto install_future = install_xmage( get_installation_package_name( update_desc ) ,  install_path );
+    auto install_future = install_xmage( get_installation_package_name( update_desc ) ,  install_path , progress );
     progress_label->set_label( _( "install update" ) );
     install_future.wait();
+    if ( install_future.get() == false )
+    {
+        progress_label->set_label( _( "install faliure" ) );
+        return ;
+    }
     progress_label->set_label( _( "install success" ) );
     if ( type == XmageType::Release )
         config.set_release_version( update_desc.version_name );

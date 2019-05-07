@@ -17,13 +17,6 @@ typedef struct ClientDescription
     Glib::ustring download_url;
 }xmage_desc_t;
 
-typedef struct Progress
-{
-    curl_off_t * dlnow;
-    curl_off_t * dltotal;
-    Glib::Dispatcher * progress_dispatcher;
-}progress_t;
-
 //non-thread safe
 bool network_utilities_initial( void );
 

@@ -4,13 +4,20 @@
 
 #include <cstdint>
 
-#include <glibmm/ustring.h>
+#include <glibmm.h>
 
 enum class XmageType:std::uint8_t
 {
     Beta,
     Release
 };
+
+typedef struct Progress
+{
+    std::int64_t * now;
+    std::int64_t * total;
+    Glib::Dispatcher * progress_dispatcher;
+}progress_t;
 
 Glib::ustring inline xmagetype_to_string( const XmageType& type )
 {

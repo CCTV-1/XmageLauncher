@@ -6,25 +6,36 @@
 #include <fstream>
 #include <memory>
 
-//#include <giomm/file.h>
 #include <jansson.h>
 #include <zip.h>
 
 #include "fileutilities.h"
 
-static void install_xmage_callback( Glib::ustring client_zip_name , Glib::ustring unzip_path ) noexcept( false )
+static bool install_xmage_callback( Glib::ustring client_zip_name , Glib::ustring unzip_path , progress_t * progress ) noexcept( false )
 {
+    if (
+        progress == nullptr ||
+        progress->now == nullptr ||
+        progress->total == nullptr ||
+        progress->progress_dispatcher == nullptr
+    )
+    {
+        return false;
+    }
+
     std::filesystem::path client_zip( client_zip_name.raw() );
     std::filesystem::path unzip_dir( unzip_path.raw() );
     if ( std::filesystem::exists( client_zip ) == false )
     {
-        return ;
+        return false;
     }
 
     if ( std::filesystem::exists( unzip_dir ) == false )
         std::filesystem::create_directories( unzip_dir );
     std::shared_ptr<zip_t> zip_ptr( zip_open( client_zip_name.c_str() , ZIP_RDONLY , nullptr ) , zip_close );
     zip_int64_t file_number = zip_get_num_entries( zip_ptr.get() , ZIP_FL_UNCHANGED );
+    *( progress->total ) = file_number;
+
     zip_uint64_t buff_size = 1024 * 8 * sizeof( char );
     std::shared_ptr<char> data_buff( static_cast<char *>( calloc( buff_size , sizeof( char ) ) ) , free );
     for( zip_int64_t i = 0 ; i < file_number ; i++ )
@@ -67,13 +78,18 @@ static void install_xmage_callback( Glib::ustring client_zip_name , Glib::ustrin
         {
             g_log( __func__ , G_LOG_LEVEL_MESSAGE , "file name:'%s/%s' encoding not supported" , unzip_path.c_str() , file_stat.name );
         }
+
+        *( progress->now ) = i;
+        progress->progress_dispatcher->emit();
     }
+
+    return true;
 }
 
-std::shared_future<void> install_xmage( Glib::ustring client_zip_name , Glib::ustring unzip_path ) noexcept( false )
+std::shared_future<bool> install_xmage( Glib::ustring client_zip_name , Glib::ustring unzip_path , progress_t * progress ) noexcept( false )
 {
-    std::packaged_task<void()> task( std::bind( install_xmage_callback , client_zip_name , unzip_path ) );
-    std::shared_future<void> unzip_future = task.get_future();
+    std::packaged_task<bool()> task( std::bind( install_xmage_callback , client_zip_name , unzip_path , progress ) );
+    std::shared_future<bool> unzip_future = task.get_future();
     std::thread( std::move(task) ).detach();
 
     return unzip_future;
