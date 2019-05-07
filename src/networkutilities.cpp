@@ -34,10 +34,16 @@ static int download_description_callback( void * client_ptr , curl_off_t dltotal
 {
     if ( client_ptr == nullptr )
         return 0;
-    
-    download_desc_t * desc = static_cast<download_desc_t *>( client_ptr );
-    desc->total = dltotal;
-    desc->now = dlnow;
+    progress_t * download_desc = static_cast<progress_t *>( client_ptr );
+    if ( download_desc->dlnow == nullptr )
+        return 0;
+    if ( download_desc->dltotal == nullptr )
+        return 0;
+    *( download_desc->dlnow ) = dlnow;
+    *( download_desc->dltotal ) = dltotal;
+    //notify progress update
+    download_desc->progress_dispatcher->emit();
+
     return 0;
 }
 
@@ -297,7 +303,7 @@ static xmage_desc_t get_last_beta_version( void ) noexcept( false )
     return { json_string_value( version ) , json_string_value( download_url ) };
 }
 
-static bool download_client_callback( xmage_desc_t client_desc , download_desc_t * download_desc )
+static bool download_client_callback( xmage_desc_t client_desc , progress_t * download_desc )
 {
     std::shared_ptr<CURL> curl_handle( curl_easy_init() , curl_easy_cleanup );
 
@@ -389,7 +395,7 @@ std::shared_future<xmage_desc_t> get_last_version( XmageType type )
     return version_future;
 }
 
-std::shared_future<bool> download_xmage( xmage_desc_t client_desc , download_desc_t * download_desc )
+std::shared_future<bool> download_xmage( xmage_desc_t client_desc , progress_t * download_desc )
 {
     std::packaged_task<bool()> task( std::bind( download_client_callback , client_desc , download_desc ) );
     std::shared_future<bool> download_future = task.get_future();

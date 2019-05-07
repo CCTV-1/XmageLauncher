@@ -28,7 +28,7 @@ public:
     std::uint32_t get_proxy_port( void );
     std::uint32_t get_jvm_xms( void );
     std::uint32_t get_jvm_xmx( void );
-    XmageType    get_update_source( void );
+    XmageType     get_active_xmage( void );
 
     LauncherConfig& set_beta_version( const Glib::ustring& );
     LauncherConfig& set_beta_path( const Glib::ustring& );
@@ -40,7 +40,7 @@ public:
     LauncherConfig& set_proxy_port( const std::uint32_t& );
     LauncherConfig& set_jvm_xms( const std::uint32_t& );
     LauncherConfig& set_jvm_xmx( const std::uint32_t& );
-    LauncherConfig& set_update_source( const XmageType& );
+    LauncherConfig& set_active_xmage( const XmageType& );
 
     //only getter
     Glib::ustring get_java_path( void );
@@ -48,15 +48,12 @@ public:
     Glib::ustring get_beta_server( void );
     Glib::ustring get_release_client( void );
     Glib::ustring get_release_server( void );
-    //don't exitst
-    //LauncherConfig& set_beta_client( const Glib::ustring& );
-    //LauncherConfig& set_beta_server( const Glib::ustring& );
-    //LauncherConfig& set_release_client( const Glib::ustring& );
-    //LauncherConfig& set_release_server( const Glib::ustring& );
-
-    //getter special case return a new string.
-    Glib::ustring get_release_mage_version( void );
     Glib::ustring get_beta_mage_version( void );
+    Glib::ustring get_release_mage_version( void );
+    Glib::ustring get_active_xmage_path( void );
+    Glib::ustring get_active_xmage_version( void );
+    Glib::ustring get_active_xmage_client( void );
+    Glib::ustring get_active_xmage_serve( void );
 private:
     LauncherConfig();
 

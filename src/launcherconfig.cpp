@@ -16,6 +16,8 @@
 //proxy_port=1080
 //jvm_xms=256
 //jvm_xmx=1024
+//#0 -> XmageType::Beta 1->XmageType::Release
+//active_xmage=1
 constexpr const char * CONFIG_FILE_NAME = "config.conf";
 
 LauncherConfig::LauncherConfig()
@@ -125,17 +127,17 @@ std::uint32_t LauncherConfig::get_jvm_xmx()
     }
     return this->config_file.get_integer( "Setting" , "jvm_xmx" );
 }
-XmageType LauncherConfig::get_update_source()
+XmageType LauncherConfig::get_active_xmage()
 {
-    if ( this->config_file.has_key( "Setting" , "update_source" ) == false )
+    if ( this->config_file.has_key( "Setting" , "active_xmage" ) == false )
     {
-        this->config_file.set_integer( "Setting" , "update_source" , static_cast<int>( XmageType::Release ) );
+        this->config_file.set_integer( "Setting" , "active_xmage" , static_cast<int>( XmageType::Release ) );
     }
-    return static_cast<XmageType>( this->config_file.get_integer( "Setting" , "update_source" ) );
+    return static_cast<XmageType>( this->config_file.get_integer( "Setting" , "active_xmage" ) );
 }
 
 
-//only setter
+//only getter
 Glib::ustring LauncherConfig::get_beta_client()
 {
     return this->get_beta_path() + "/mage-client/";
@@ -182,6 +184,90 @@ Glib::ustring LauncherConfig::get_beta_mage_version( void )
         mage_version += beta_version[i];
     }
     return mage_version;
+}
+Glib::ustring LauncherConfig::get_active_xmage_version( void )
+{
+    XmageType active_type = this->get_active_xmage();
+    Glib::ustring version;
+    switch ( active_type )
+    {
+        default:
+        case XmageType::Release:
+        {
+            version = this->get_release_mage_version();
+            break;
+        }
+        case XmageType::Beta:
+        {
+            version = this->get_beta_mage_version();
+            break;
+        }
+    }
+
+    return version;
+}
+Glib::ustring LauncherConfig::get_active_xmage_client( void )
+{
+    XmageType active_type = this->get_active_xmage();
+    Glib::ustring version;
+    switch ( active_type )
+    {
+        default:
+        case XmageType::Release:
+        {
+            version = this->get_release_client();
+            break;
+        }
+        case XmageType::Beta:
+        {
+            version = this->get_beta_client();
+            break;
+        }
+    }
+
+    return version;
+}
+Glib::ustring LauncherConfig::get_active_xmage_serve( void )
+{
+    XmageType active_type = this->get_active_xmage();
+    Glib::ustring version;
+    switch ( active_type )
+    {
+        default:
+        case XmageType::Release:
+        {
+            version = this->get_release_server();
+            break;
+        }
+        case XmageType::Beta:
+        {
+            version = this->get_beta_server();
+            break;
+        }
+    }
+
+    return version;
+}
+Glib::ustring LauncherConfig::get_active_xmage_path( void )
+{
+    XmageType active_type = this->get_active_xmage();
+    Glib::ustring version;
+    switch ( active_type )
+    {
+        default:
+        case XmageType::Release:
+        {
+            version = this->get_release_path();
+            break;
+        }
+        case XmageType::Beta:
+        {
+            version = this->get_beta_path();
+            break;
+        }
+    }
+
+    return version;
 }
 
 LauncherConfig& LauncherConfig::set_beta_version( const Glib::ustring& beta_version )
@@ -234,9 +320,9 @@ LauncherConfig& LauncherConfig::set_jvm_xmx( const std::uint32_t& jvm_xmx )
     this->config_file.set_integer( "Setting" , "jvm_xmx" , jvm_xmx );
     return *this;
 }
-LauncherConfig& LauncherConfig::set_update_source( const XmageType& type )
+LauncherConfig& LauncherConfig::set_active_xmage( const XmageType& type )
 {
-    this->config_file.set_integer( "Setting" , "update_source" , static_cast<int>( type ) );
+    this->config_file.set_integer( "Setting" , "active_xmage" , static_cast<int>( type ) );
     return *this;
 }
 

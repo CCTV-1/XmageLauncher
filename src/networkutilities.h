@@ -17,11 +17,12 @@ typedef struct ClientDescription
     Glib::ustring download_url;
 }xmage_desc_t;
 
-typedef struct DownloadDescription
+typedef struct Progress
 {
-    curl_off_t total;
-    curl_off_t now;
-}download_desc_t;
+    curl_off_t * dlnow;
+    curl_off_t * dltotal;
+    Glib::Dispatcher * progress_dispatcher;
+}progress_t;
 
 //non-thread safe
 bool network_utilities_initial( void );
@@ -33,7 +34,7 @@ bool set_proxy( Glib::ustring scheme , Glib::ustring hostname , std::uint32_t po
 
 std::shared_future<xmage_desc_t> get_last_version( XmageType type );
 
-std::shared_future<bool> download_xmage( xmage_desc_t desc , download_desc_t * download_now = nullptr );
+std::shared_future<bool> download_xmage( xmage_desc_t desc , progress_t * download_now = nullptr );
 
 Glib::ustring get_installation_package_name( xmage_desc_t desc );
 
