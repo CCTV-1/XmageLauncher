@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-05-07 18:48+0800\n"
+"POT-Creation-Date: 2019-05-10 21:27+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -77,47 +77,47 @@ msgstr ""
 msgid "0/0"
 msgstr ""
 
-#: src/launcher.cpp:105
+#: src/launcher.cpp:44
+msgid "close menu"
+msgstr ""
+
+#: src/utilities.cpp:659
 #, c-format
 msgid "last xmage version:'%s',download url:'%s'."
 msgstr ""
 
-#: src/launcher.cpp:108
+#: src/utilities.cpp:662
 msgid "exist new xmage,now download."
 msgstr ""
 
-#: src/launcher.cpp:112
+#: src/utilities.cpp:669
 msgid "no need to update"
 msgstr ""
 
-#: src/launcher.cpp:121
-msgid " download update"
+#: src/utilities.cpp:683
+msgid "download update"
 msgstr ""
 
-#: src/launcher.cpp:125
+#: src/utilities.cpp:691
 msgid "download success,install..."
 msgstr ""
 
-#: src/launcher.cpp:130
+#: src/utilities.cpp:701
 msgid "download failure"
 msgstr ""
 
-#: src/launcher.cpp:136
+#: src/utilities.cpp:709
 msgid "using local installation package"
 msgstr ""
 
-#: src/launcher.cpp:148
+#: src/utilities.cpp:724
 msgid "install update"
 msgstr ""
 
-#: src/launcher.cpp:152
+#: src/utilities.cpp:732
 msgid "install faliure"
 msgstr ""
 
-#: src/launcher.cpp:155
+#: src/utilities.cpp:740
 msgid "install success"
-msgstr ""
-
-#: src/launcher.cpp:215
-msgid "close menu"
 msgstr ""
