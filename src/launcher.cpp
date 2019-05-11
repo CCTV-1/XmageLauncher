@@ -146,7 +146,7 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
 
     this->show_all();
 
-    update_dispatcher.connect( sigc::mem_fun( *this , &XmageLauncher::update_prog ) );
+    update_dispatcher.connect( sigc::mem_fun( *this , &XmageLauncher::update_widgets ) );
 }
 
 
@@ -205,19 +205,6 @@ void XmageLauncher::disable_launch( void )
 {
     Gtk::Button * client_button;
     this->launcher_builder->get_widget( "LauncherClient" , client_button );
-    client_button->set_sensitive( true );
-    Gtk::Button * server_button;
-    this->launcher_builder->get_widget( "LauncherServer" , server_button );
-    server_button->set_sensitive( true );
-    Gtk::Button * xmage_button;
-    this->launcher_builder->get_widget( "LauncherXmage" , xmage_button );
-    xmage_button->set_sensitive( true );
-}
-
-void XmageLauncher::enable_launch( void )
-{
-    Gtk::Button * client_button;
-    this->launcher_builder->get_widget( "LauncherClient" , client_button );
     client_button->set_sensitive( false );
     Gtk::Button * server_button;
     this->launcher_builder->get_widget( "LauncherServer" , server_button );
@@ -225,6 +212,19 @@ void XmageLauncher::enable_launch( void )
     Gtk::Button * xmage_button;
     this->launcher_builder->get_widget( "LauncherXmage" , xmage_button );
     xmage_button->set_sensitive( false );
+}
+
+void XmageLauncher::enable_launch( void )
+{
+    Gtk::Button * client_button;
+    this->launcher_builder->get_widget( "LauncherClient" , client_button );
+    client_button->set_sensitive( true );
+    Gtk::Button * server_button;
+    this->launcher_builder->get_widget( "LauncherServer" , server_button );
+    server_button->set_sensitive( true );
+    Gtk::Button * xmage_button;
+    this->launcher_builder->get_widget( "LauncherXmage" , xmage_button );
+    xmage_button->set_sensitive( true );
 }
 
 void XmageLauncher::do_update( void )
@@ -237,8 +237,9 @@ void XmageLauncher::do_update( void )
     );
 }
 
-void XmageLauncher::update_prog( void )
+void XmageLauncher::update_widgets( void )
 {
+    bool update_end;
     std::int64_t now = 0 , total = 0;
     Glib::ustring info;
     Gtk::ProgressBar * progress_bar = nullptr;
@@ -248,7 +249,15 @@ void XmageLauncher::update_prog( void )
     this->launcher_builder->get_widget( "Progress" , progress_bar );
     this->launcher_builder->get_widget( "ProgressTarget" , progress_target );
     this->launcher_builder->get_widget( "ProgressValue" , progress_value );
-    this->update.get_data( now , total , info );
+    this->update.get_data( update_end , now , total , info );
+    if ( update_end )
+    {
+        this->enable_launch();
+    }
+    else
+    {
+        this->disable_launch();
+    }
     progress_target->set_label( info );
     progress_value->set_label( std::to_string( now ) + " / "  + std::to_string( total ) );
     if ( total == 0 )
@@ -257,7 +266,7 @@ void XmageLauncher::update_prog( void )
         progress_bar->set_fraction( now/static_cast<gdouble>( total ) );
 }
 
-void XmageLauncher::info_notify( void )
+void XmageLauncher::update_notify( void )
 {
     this->update_dispatcher.emit();
 }

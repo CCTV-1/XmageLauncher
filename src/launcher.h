@@ -26,8 +26,8 @@ public:
     void show_setting( void );
     void close_setting( int );
     void do_update( void );
-    void update_prog( void );
-    void info_notify( void );
+    void update_widgets( void );
+    void update_notify( void );
     config_t& get_config( void );
 
 private:
