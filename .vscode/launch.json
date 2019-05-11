@@ -8,7 +8,7 @@
             "name": "gcc build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/launcher.exe",
+            "program": "${workspaceFolder}/XmageLauncher.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

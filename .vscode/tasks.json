@@ -5,8 +5,7 @@
             "label": "gcc build active file",
             "command": "D:/MSYS2/usr/bin/make",
             "args": [
-                "DEBUG=1",
-                "${fileBasenameNoExtension}"
+                "DEBUG=1"
             ],
             "options": {
                 "cwd": "${workspaceFolder}",
