@@ -370,7 +370,7 @@ static bool install_xmage_callback( Glib::ustring client_zip_name , Glib::ustrin
     zip_int64_t file_number = zip_get_num_entries( zip_ptr.get() , ZIP_FL_UNCHANGED );
     {
         std::lock_guard<std::mutex> lock( progress->work->update_mutex );
-        progress->work->prog_now = file_number;
+        progress->work->prog_total = file_number;
     }
 
     zip_uint64_t buff_size = 1024 * 8 * sizeof( char );
@@ -424,86 +424,6 @@ static bool install_xmage_callback( Glib::ustring client_zip_name , Glib::ustrin
 
     return true;
 }
-
-/* void update_xmage_callback( config_t& config , XmageType type , progress_t * progress , Gtk::Label * progress_label )
-{
-    auto update_future = get_last_version( type );
-    xmage_desc_t update_desc;
-    try
-    {
-        update_desc = update_future.get();
-    }
-    catch ( const std::exception& e )
-    {
-        //get update information failure
-        g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , e.what() );
-        return ;
-    }
-    Glib::ustring version;
-    if ( type == XmageType::Release )
-    {
-        version = config.get_release_version();
-    }
-    else
-    {
-        version = config.get_beta_version();
-    }
-
-    g_log( __func__ , G_LOG_LEVEL_MESSAGE , _( "last xmage version:'%s',download url:'%s'." ) , update_desc.version_name.c_str() , update_desc.download_url.c_str() );
-    if ( update_desc.version_name.compare( version ) )
-    {
-        g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , _( "exist new xmage,now download." ) );
-    }
-    else
-    {
-        progress_label->set_label( _( "no need to update" ) );
-        return ;
-    }
-
-    std::shared_future<bool> download_future;
-    //if exists
-    if ( std::filesystem::is_regular_file( get_installation_package_name( update_desc ).raw() ) == false )
-    {
-        download_future = download_xmage( update_desc , progress );
-        progress_label->set_label( _(" download update" ) );
-        if ( download_future.get() )
-        {
-            progress_label->set_label( _( "download success,install..." ) );
-            std::filesystem::rename( get_download_temp_name( update_desc ).raw() , get_installation_package_name( update_desc ).raw() );
-        }
-        else
-        {
-            progress_label->set_label( _( "download failure" ) );
-            return ;
-        }
-    }
-    else
-    {
-        g_log( __func__ , G_LOG_LEVEL_MESSAGE , _( "using local installation package" ) );
-    }
-    Glib::ustring install_path;
-    if ( type == XmageType::Release )
-    {
-        install_path = config.get_release_path();
-    }
-    else
-    {
-        install_path = config.get_beta_path();
-    }
-    auto install_future = install_xmage( get_installation_package_name( update_desc ) ,  install_path , progress );
-    progress_label->set_label( _( "install update" ) );
-    if ( install_future.get() == false )
-    {
-        progress_label->set_label( _( "install faliure" ) );
-        return ;
-    }
-    progress_label->set_label( _( "install success" ) );
-    if ( type == XmageType::Release )
-        config.set_release_version( update_desc.version_name );
-    else
-        config.set_beta_version( update_desc.version_name );
-    std::filesystem::remove( get_installation_package_name( update_desc ).raw() );
-} */
 
 bool network_utilities_initial( void )
 {
@@ -635,6 +555,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
     config_t& config = caller->get_config();
     XmageType type = config.get_active_xmage();
     progress_t progress = { caller , this };
+    //automatic dis/enable launch button
     std::shared_ptr<bool> lock_launch(
         [ this , caller ]() -> bool *
         {
@@ -685,7 +606,6 @@ void UpdateWork::do_update( XmageLauncher * caller )
     }
     else
     {
-        //progress_label->set_label( _( "no need to update" ) );
         {
             std::lock_guard<std::mutex> lock( this->update_mutex );
             this->prog_info = _( "no need to update" );
@@ -698,8 +618,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
     //if exists
     if ( std::filesystem::is_regular_file( get_installation_package_name( update_desc ).raw() ) == false )
     {
-        download_future = download_xmage( update_desc , &progress );//progress );
-        //progress_label->set_label( _(" download update" ) );
+        download_future = download_xmage( update_desc , &progress );
         {
             std::lock_guard<std::mutex> lock( this->update_mutex );
             this->prog_info = _( "download update" );
@@ -707,7 +626,6 @@ void UpdateWork::do_update( XmageLauncher * caller )
         caller->update_notify();
         if ( download_future.get() )
         {
-            //progress_label->set_label( _( "download success,install..." ) );
             {
                 std::lock_guard<std::mutex> lock( this->update_mutex );
                 this->prog_info = _( "download success,install..." );
@@ -717,7 +635,6 @@ void UpdateWork::do_update( XmageLauncher * caller )
         }
         else
         {
-            //progress_label->set_label( _( "download failure" ) );
             {
                 std::lock_guard<std::mutex> lock( this->update_mutex );
                 this->prog_info = _( "download failure" );
@@ -739,8 +656,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
     {
         install_path = config.get_beta_path();
     }
-    auto install_future = install_xmage( get_installation_package_name( update_desc ) ,  install_path , &progress );//progress );
-    /* progress_label->set_label( _( "install update" ) ); */
+    auto install_future = install_xmage( get_installation_package_name( update_desc ) ,  install_path , &progress );
     {
         std::lock_guard<std::mutex> lock( this->update_mutex );
         this->prog_info = _( "install update" );
@@ -748,7 +664,6 @@ void UpdateWork::do_update( XmageLauncher * caller )
     caller->update_notify();
     if ( install_future.get() == false )
     {
-        //progress_label->set_label( _( "install faliure" ) );
         {
             std::lock_guard<std::mutex> lock( this->update_mutex );
             this->prog_info = _( "install faliure" );
@@ -756,7 +671,6 @@ void UpdateWork::do_update( XmageLauncher * caller )
         caller->update_notify();
         return ;
     }
-    //progress_label->set_label( _( "install success" ) );
     {
         std::lock_guard<std::mutex> lock( this->update_mutex );
         this->prog_info = _( "install success" );
@@ -768,14 +682,6 @@ void UpdateWork::do_update( XmageLauncher * caller )
         config.set_beta_version( update_desc.version_name );
     std::filesystem::remove( get_installation_package_name( update_desc ).raw() );
 
-
-    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "update thread enter" );
-    {
-        std::lock_guard<std::mutex> lock( this->update_mutex );
-        this->prog_now = 233;
-        this->prog_total = 233333;
-        this->prog_info = "test";
-    }
     caller->update_notify();
 }
 
