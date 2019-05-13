@@ -10,7 +10,7 @@
 #include <curl/curl.h>
 #include <glibmm.h>
 
-typedef struct ClientDescription
+typedef struct
 {
     Glib::ustring version_name;
     Glib::ustring download_url;
@@ -29,6 +29,7 @@ struct UpdateWork
     UpdateWork();
     ~UpdateWork() = default;
     void do_update( XmageLauncher * caller );
+    void stop_update( void );
     void get_data( bool& update_end , std::int64_t& now , std::int64_t& total , Glib::ustring& info );
     
     mutable std::mutex update_mutex;
@@ -38,7 +39,7 @@ struct UpdateWork
     Glib::ustring prog_info;
 };
 
-typedef struct Progress
+typedef struct
 {
     XmageLauncher * caller;
     UpdateWork * work;

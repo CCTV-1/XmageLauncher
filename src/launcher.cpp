@@ -153,7 +153,10 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
 XmageLauncher::~XmageLauncher()
 {
     if ( this->update_process.joinable() )
-        this->update_process.detach();
+    {
+        this->update.stop_update();
+        this->update_process.join();
+    }
     delete setting_dialog;
 }
 

@@ -552,33 +552,31 @@ UpdateWork::UpdateWork():
 
 void UpdateWork::do_update( XmageLauncher * caller )
 {
+    //start update,disable launch button
+    {
+        std::lock_guard<std::mutex> lock( this->update_mutex );
+        this->updating = true;
+    }
+    caller->update_notify();
     config_t& config = caller->get_config();
     XmageType type = config.get_active_xmage();
     progress_t progress = { caller , this };
-    //automatic dis/enable launch button
-    std::shared_ptr<bool> lock_launch(
-        [ this , caller ]() -> bool *
-        {
-            {
-                std::lock_guard<std::mutex> lock( this->update_mutex );
-                this->updating = true;
-            }
-            caller->update_notify();
-            return nullptr;
-        }(),
-        [ this , caller ]( bool * )
-        {
-            {
-                std::lock_guard<std::mutex> lock( this->update_mutex );
-                this->updating = false;
-            }
-            caller->update_notify();
-        }
-    );
-    //avoid unused warning
-    ( void )lock_launch;
+
     auto update_future = get_last_version( type );
     xmage_desc_t update_desc;
+
+    while ( update_future.wait_for( std::chrono::microseconds( 200 ) ) != std::future_status::ready )
+    {
+        {
+            std::lock_guard<std::mutex> lock( this->update_mutex );
+            if ( this->updating == false )
+            {
+                caller->update_notify();
+                return ;
+            }
+        }
+    }
+
     try
     {
         update_desc = update_future.get();
@@ -589,6 +587,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
         g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , e.what() );
         return ;
     }
+
     Glib::ustring version;
     if ( type == XmageType::Release )
     {
@@ -624,6 +623,17 @@ void UpdateWork::do_update( XmageLauncher * caller )
             this->prog_info = _( "download update" );
         }
         caller->update_notify();
+        while ( download_future.wait_for( std::chrono::microseconds( 200 ) ) != std::future_status::ready )
+        {
+            {
+                std::lock_guard<std::mutex> lock( this->update_mutex );
+                if ( this->updating == false )
+                {
+                    caller->update_notify();
+                    return ;
+                }
+            }
+        }
         if ( download_future.get() )
         {
             {
@@ -662,6 +672,17 @@ void UpdateWork::do_update( XmageLauncher * caller )
         this->prog_info = _( "install update" );
     }
     caller->update_notify();
+    while ( install_future.wait_for( std::chrono::microseconds( 200 ) ) != std::future_status::ready )
+    {
+        {
+            std::lock_guard<std::mutex> lock( this->update_mutex );
+            if ( this->updating == false )
+            {
+                caller->update_notify();
+                return ;
+            }
+        }
+    }
     if ( install_future.get() == false )
     {
         {
@@ -682,7 +703,23 @@ void UpdateWork::do_update( XmageLauncher * caller )
         config.set_beta_version( update_desc.version_name );
     std::filesystem::remove( get_installation_package_name( update_desc ).raw() );
 
+    //update end,enable launch button
+    {
+        std::lock_guard<std::mutex> lock( this->update_mutex );
+        this->updating = false;
+    }
     caller->update_notify();
+}
+
+void UpdateWork::stop_update( void )
+{
+    {
+        std::lock_guard<std::mutex> lock( this->update_mutex );
+        if ( this->updating )
+        {
+            this->updating = false;
+        }
+    }
 }
 
 void UpdateWork::get_data( bool& update_end , std::int64_t& now , std::int64_t& total , Glib::ustring& info )
