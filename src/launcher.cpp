@@ -10,6 +10,117 @@
 
 #include "launcher.h"
 
+class LauncherProgressBar : public Gtk::DrawingArea
+{
+public:
+    LauncherProgressBar( BaseObjectType* cobject , const Glib::RefPtr<Gtk::Builder>& ):
+        Gtk::DrawingArea( cobject ),
+        prog_value( 0.0 ),
+        prog_info( "test progress info" )/* ,
+        font_desc( "Ubuntu Mono 14" ) */
+    {
+        this->layout = this->create_pango_layout( "0%" );
+        /* this->layout->set_font_description( this->font_desc ); */
+    }
+    ~LauncherProgressBar()
+    {
+        this->timeout_handler.disconnect();
+    }
+
+    void puls_prog( double value )
+    {
+        if ( value <= 0 )
+            return ;
+        if ( value + this->prog_value <= 1.0 )
+        {
+            this->prog_value += value;
+        }
+        else
+        {
+            this->prog_value = 1.0;
+        }
+        
+        this->queue_draw();
+    }
+
+    void set_progress_value( double value )
+    {
+        if ( value < 0.0 )
+        {
+            this->prog_value = 0.0;
+            return ;
+        }
+        if ( value >= 1.0 )
+        {
+            this->prog_value = 1.0;
+            return ;
+        }
+
+        this->prog_value = value;
+    }
+
+    const double& get_progress_value( void ) const
+    {
+        return std::ref( this->prog_value );
+    }
+
+    void set_progress_info( Glib::ustring info )
+    {
+        this->prog_info = std::move( info );
+    }
+
+    const Glib::ustring& get_progress_info( void ) const
+    {
+        return std::ref( this->prog_info );
+    }
+
+protected:
+    void get_preferred_height_vfunc( int& minimum_width , int& natural_width ) const override
+    {
+        minimum_width = 30;
+        natural_width = 35;
+    }
+
+    bool on_draw( const Cairo::RefPtr<Cairo::Context>& cairo_context ) override
+    {
+        const Gtk::Allocation allocation = get_allocation();
+        constexpr double line_width = 2;
+        cairo_context->set_line_width( line_width );
+        
+        //background color
+        cairo_context->set_source_rgb( 204/255.0 , 204/255.0 , 204/255.0 );
+        cairo_context->rectangle( 0 , 0 , allocation.get_width() , allocation.get_height() );
+        cairo_context->fill_preserve();
+
+        //bar box color
+        cairo_context->set_source_rgb( 0/255.0 , 0/255.0 , 0/255.0 );
+        cairo_context->rectangle( line_width/2 , line_width/2 , allocation.get_width() - line_width , allocation.get_height() - line_width );
+        cairo_context->stroke();
+
+        //progess color
+        cairo_context->set_source_rgb( 25/255.0 , 189/255.0 , 155/255.0 );
+        cairo_context->rectangle( line_width , line_width , ( allocation.get_width() - 2*line_width )*prog_value , allocation.get_height() - 2*line_width );
+        cairo_context->fill_preserve();
+
+        //porgress info
+        int layout_width , layout_height;
+        cairo_context->set_source_rgb( 0/255.0 , 0/255.0 , 0/255.0 );
+        this->layout->set_text( this->prog_info );
+        this->layout->get_pixel_size( layout_width , layout_height );
+        cairo_context->move_to( ( allocation.get_width() - layout_width )/2 , ( allocation.get_height() - layout_height )/2 );
+        this->layout->show_in_cairo_context( cairo_context );
+        return true;
+    }
+
+private:
+    double prog_value;
+
+    Glib::ustring prog_info;
+    Glib::RefPtr<Pango::Layout> layout;
+    /* Pango::FontDescription font_desc; */
+    sigc::connection timeout_handler;
+};
+
 XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::Builder>& builder ):
     Gtk::Window( cobject ),
     launcher_builder( builder ),
@@ -245,13 +356,10 @@ void XmageLauncher::update_widgets( void )
     bool update_end;
     std::int64_t now = 0 , total = 0;
     Glib::ustring info;
-    Gtk::ProgressBar * progress_bar = nullptr;
-    Gtk::Label * progress_target = nullptr;
-    Gtk::Label * progress_value;
 
-    this->launcher_builder->get_widget( "Progress" , progress_bar );
-    this->launcher_builder->get_widget( "ProgressTarget" , progress_target );
-    this->launcher_builder->get_widget( "ProgressValue" , progress_value );
+    LauncherProgressBar * update_progress_bar = nullptr;
+    this->launcher_builder->get_widget_derived( "ProgressBar" , update_progress_bar );
+    
     this->update.get_data( update_end , now , total , info );
     if ( update_end )
     {
@@ -261,12 +369,12 @@ void XmageLauncher::update_widgets( void )
     {
         this->disable_launch();
     }
-    progress_target->set_label( info );
-    progress_value->set_label( std::to_string( now ) + " / "  + std::to_string( total ) );
-    if ( total == 0 )
-        progress_bar->set_fraction( 0 );
-    else
-        progress_bar->set_fraction( now/static_cast<gdouble>( total ) );
+    if ( total > 0 )
+        info += ":" + std::to_string( now ) + " / "  + std::to_string( total );
+    update_progress_bar->set_progress_info( info );
+    update_progress_bar->set_progress_value( total ? now/static_cast<gdouble>( total ) : 0 );
+
+    this->queue_draw();
 }
 
 void XmageLauncher::update_notify( void )

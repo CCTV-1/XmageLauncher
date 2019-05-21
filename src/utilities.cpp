@@ -58,12 +58,12 @@ static int download_description_callback( void * client_ptr , curl_off_t dltotal
 static std::size_t get_json_callback( char * content , std::size_t size , std::size_t element_number , void * save_ptr )
 {
     std::size_t realsize = size*element_number;
-    json_buff_t * ptr = static_cast< json_buff_t * >( save_ptr );
+    json_buff_t * ptr = static_cast<json_buff_t *>( save_ptr );
     char * new_buff = static_cast<char *>( realloc( ptr->buff , ptr->current_size + sizeof( char )*realsize + 1 ) );
     ptr->buff = new_buff;
-    memccpy( &( ptr->buff[ptr->current_size] ) , content , 1 , realsize );
+    memccpy( &( ptr->buff[ ptr->current_size ] ) , content , 1 , realsize );
     ptr->current_size += realsize;
-    ptr->buff[ptr->current_size] = '\0';
+    ptr->buff[ ptr->current_size ] = '\0';
     return realsize;
 }
 
@@ -556,6 +556,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
     {
         std::lock_guard<std::mutex> lock( this->update_mutex );
         this->updating = true;
+        this->prog_info = _( "check for updates" );
     }
     caller->update_notify();
     config_t& config = caller->get_config();
@@ -585,7 +586,14 @@ void UpdateWork::do_update( XmageLauncher * caller )
     {
         //get update information failure
         g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , e.what() );
-        return ;
+        {
+            std::lock_guard<std::mutex> lock( this->update_mutex );
+            if ( this->updating == false )
+            {
+                caller->update_notify();
+                return ;
+            }
+        }
     }
 
     Glib::ustring version;
@@ -715,10 +723,7 @@ void UpdateWork::stop_update( void )
 {
     {
         std::lock_guard<std::mutex> lock( this->update_mutex );
-        if ( this->updating )
-        {
-            this->updating = false;
-        }
+        this->updating = false;
     }
 }
 
