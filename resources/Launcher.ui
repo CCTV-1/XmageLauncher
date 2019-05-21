@@ -18,6 +18,22 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkProgressBar" id="Progress">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="valign">center</property>
+    <property name="pulse_step">0.01</property>
+  </object>
+  <object class="GtkLabel" id="ProgressTarget">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="label" translatable="yes">checkupdate</property>
+  </object>
+  <object class="GtkLabel" id="ProgressValue">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="label" translatable="yes">0/0</property>
+  </object>
   <object class="GtkListStore" id="ProxyList">
     <columns>
       <!-- column-name ProxyScheme -->
@@ -460,18 +476,6 @@
         <property name="row_homogeneous">True</property>
         <property name="column_homogeneous">True</property>
         <child>
-          <object class="GtkProgressBar" id="Progress">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="pulse_step">0.01</property>
-          </object>
-          <packing>
-            <property name="left_attach">0</property>
-            <property name="top_attach">2</property>
-            <property name="width">6</property>
-          </packing>
-        </child>
-        <child>
           <object class="GtkButton" id="LauncherClient">
             <property name="label" translatable="yes">LauncherClient</property>
             <property name="visible">True</property>
@@ -514,27 +518,14 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="ProgressTarget">
+          <object class="GtkDrawingArea" id="ProgressBar">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">checkupdate</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
             <property name="top_attach">1</property>
-            <property name="width">3</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkLabel" id="ProgressValue">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="label" translatable="yes">0/0</property>
-          </object>
-          <packing>
-            <property name="left_attach">3</property>
-            <property name="top_attach">1</property>
-            <property name="width">3</property>
+            <property name="width">6</property>
           </packing>
         </child>
       </object>
