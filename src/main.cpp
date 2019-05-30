@@ -13,7 +13,7 @@ int main ( int argc , char * argv[] )
     bind_textdomain_codeset( "XmageLauncher" , "UTF-8" );
     textdomain( "XmageLauncher" );
     json_set_alloc_funcs( malloc , free );
-    if ( network_utilities_initial() == false )
+    if ( curl_global_init( CURL_GLOBAL_ALL ) != 0 )
     {
         g_log( __func__ , G_LOG_LEVEL_ERROR , "network module initial fault" );
     }

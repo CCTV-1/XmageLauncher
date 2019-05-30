@@ -18,6 +18,7 @@
 typedef struct JsonBuff
 {
     char * buff;
+    std::size_t allocate_size;
     std::size_t current_size;
 }json_buff_t;
 
@@ -59,8 +60,16 @@ static std::size_t get_json_callback( char * content , std::size_t size , std::s
 {
     std::size_t realsize = size*element_number;
     json_buff_t * ptr = static_cast<json_buff_t *>( save_ptr );
-    char * new_buff = static_cast<char *>( realloc( ptr->buff , ptr->current_size + sizeof( char )*realsize + 1 ) );
-    ptr->buff = new_buff;
+    std::size_t need_size = ptr->current_size + sizeof( char )*realsize + 1;
+    if ( need_size > ptr->allocate_size )
+    {
+        if ( ptr->allocate_size == 0 )
+            ptr->allocate_size = 126;
+        while( need_size > ptr->allocate_size )
+            ptr->allocate_size *= 2;
+        char * new_buff = static_cast<char *>( realloc( ptr->buff , ptr->allocate_size ) );
+        ptr->buff = new_buff;
+    }
     memccpy( &( ptr->buff[ ptr->current_size ] ) , content , 1 , realsize );
     ptr->current_size += realsize;
     ptr->buff[ ptr->current_size ] = '\0';
@@ -111,7 +120,7 @@ static xmage_desc_t get_last_release_version( void ) noexcept( false )
 
     std::int8_t re_try = 4;
     long default_timeout = 30L;
-    json_buff_t json_buff = { nullptr , 0 };
+    json_buff_t json_buff = { nullptr , 0 , 0 };
     char error_buff[CURL_ERROR_SIZE];
     //c str* safe
     error_buff[0] = '\0';
@@ -212,7 +221,7 @@ static xmage_desc_t get_last_beta_version( void ) noexcept( false )
 
     std::int8_t re_try = 4;
     long default_timeout = 30L;
-    json_buff_t json_buff = { nullptr , 0 };
+    json_buff_t json_buff = { nullptr , 0 , 0 };
     char error_buff[CURL_ERROR_SIZE];
     //c str* safe
     error_buff[0] = '\0';
@@ -311,7 +320,7 @@ static xmage_desc_t get_last_beta_version( void ) noexcept( false )
     return { json_string_value( version ) , json_string_value( download_url ) };
 }
 
-static bool download_client_callback( xmage_desc_t client_desc , progress_t * download_desc )
+static bool download_update_callback( xmage_desc_t client_desc , progress_t * download_desc )
 {
     std::shared_ptr<CURL> curl_handle( curl_easy_init() , curl_easy_cleanup );
 
@@ -326,31 +335,74 @@ static bool download_client_callback( xmage_desc_t client_desc , progress_t * do
 
     long default_timeout = 60*60L;
     char error_buff[CURL_ERROR_SIZE];
-    CURLcode res = CURLE_OK;
 
     common_curl_opt_set( curl_handle );
     curl_easy_setopt( curl_handle.get() , CURLOPT_URL , client_desc.download_url.c_str() );
     curl_easy_setopt( curl_handle.get() , CURLOPT_TIMEOUT , default_timeout );
     curl_easy_setopt( curl_handle.get() , CURLOPT_NOPROGRESS , 0L );
-    if ( download_desc != nullptr )
-        curl_easy_setopt( curl_handle.get() , CURLOPT_XFERINFOFUNCTION , download_description_callback );
-        curl_easy_setopt( curl_handle.get() , CURLOPT_XFERINFODATA , download_desc );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_XFERINFOFUNCTION , download_description_callback );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_XFERINFODATA , download_desc );
     curl_easy_setopt( curl_handle.get() , CURLOPT_WRITEFUNCTION , fwrite );
     curl_easy_setopt( curl_handle.get() , CURLOPT_ERRORBUFFER , error_buff );
     curl_easy_setopt( curl_handle.get() , CURLOPT_WRITEDATA , download_file.get() );
 
-    res = curl_easy_perform( curl_handle.get() );
-    if ( res != CURLE_OK )
+    std::shared_ptr<CURLM> curlmulti_handle(
+        [ curl_handle ]() -> CURLM *
+        {
+            CURLM * handle = curl_multi_init();
+            curl_multi_add_handle( handle , curl_handle.get() );
+            return handle;
+        }(),
+        [ curl_handle ]( CURLM * handle ) -> void
+        {
+            curl_multi_remove_handle( handle , curl_handle.get() );
+            curl_multi_cleanup( handle );
+        }
+    );
+
+    int running_handles;
+    int repeats = 0;
+    curl_multi_perform( curlmulti_handle.get() , &running_handles );
+    
+    while( running_handles )
     {
-        g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error type:\'%s\',error message:\'%s\'" , 
-                client_desc.download_url.c_str() , curl_easy_strerror( res ) , error_buff );
-        return false;
+        int numfds;
+        CURLMcode status_code = curl_multi_wait( curlmulti_handle.get() , nullptr , 0 , 100 , &numfds );
+
+        bool do_return;
+        {
+            std::lock_guard<std::mutex> lock( download_desc->work->update_mutex );
+            do_return = !( download_desc->work->updating );
+        }
+        if ( do_return )
+        {
+            return true;
+        }
+
+        if ( status_code != CURLM_OK )
+        {
+            g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error type:\'%s\',error message:\'%s\'" , 
+                    client_desc.download_url.c_str() , curl_multi_strerror( status_code ) , error_buff );
+            return false;
+        }
+
+        if ( numfds == 0 )
+        {
+            if ( repeats++ > 0 )
+                std::this_thread::sleep_for( std::chrono::microseconds( 100 ) );
+        }
+        else
+        {
+            repeats = 0;
+        }
+
+        curl_multi_perform( curlmulti_handle.get() , &running_handles );
     }
 
     return true;
 }
 
-static bool install_xmage_callback( Glib::ustring client_zip_name , Glib::ustring unzip_path , progress_t * progress ) noexcept( false )
+static bool install_update_callback( Glib::ustring client_zip_name , Glib::ustring unzip_path , progress_t * progress ) noexcept( false )
 {
     if ( progress == nullptr || progress->caller == nullptr || progress->work == nullptr )
     {
@@ -372,6 +424,7 @@ static bool install_xmage_callback( Glib::ustring client_zip_name , Glib::ustrin
         std::lock_guard<std::mutex> lock( progress->work->update_mutex );
         progress->work->prog_total = file_number;
     }
+    progress->caller->update_notify();
 
     zip_uint64_t buff_size = 1024 * 8 * sizeof( char );
     std::shared_ptr<char> data_buff( static_cast<char *>( calloc( buff_size , sizeof( char ) ) ) , free );
@@ -425,24 +478,22 @@ static bool install_xmage_callback( Glib::ustring client_zip_name , Glib::ustrin
     return true;
 }
 
-bool network_utilities_initial( void )
-{
-    return ( curl_global_init( CURL_GLOBAL_ALL ) == 0 );
-}
-
 bool set_proxy( Glib::ustring scheme , Glib::ustring hostname , std::uint32_t port )
 {
     Glib::ustring proxy_desc;
     Glib::ustring diff_scheme = scheme.lowercase();
 
-    if (
-        diff_scheme != "http"    &&
-        diff_scheme != "https"   &&
-        diff_scheme != "socks4"  &&
-        diff_scheme != "socks4a" &&
-        diff_scheme != "socks5"  &&
-        diff_scheme != "socks5h"
-    )
+    const std::map<Glib::ustring,bool> scheme_map(
+    {
+        {   "http"    , true   },
+        {   "https"   , true   },
+        {   "socks4"  , true   },
+        {   "socks4a" , true   },
+        {   "socks5"  , true   },
+        {   "socks5h" , true   },
+    });
+
+    if ( scheme_map.find( diff_scheme ) == scheme_map.end() )
     {
         return false;
     }
@@ -479,9 +530,9 @@ std::shared_future<xmage_desc_t> get_last_version( XmageType type )
     return version_future;
 }
 
-std::shared_future<bool> download_xmage( xmage_desc_t client_desc , progress_t * download_desc )
+std::shared_future<bool> download_update( xmage_desc_t client_desc , progress_t * download_desc )
 {
-    std::packaged_task<bool()> task( std::bind( download_client_callback , client_desc , download_desc ) );
+    std::packaged_task<bool()> task( std::bind( download_update_callback , client_desc , download_desc ) );
     std::shared_future<bool> download_future = task.get_future();
     std::thread( std::move(task) ).detach();
 
@@ -498,9 +549,9 @@ Glib::ustring get_download_temp_name( xmage_desc_t client_desc )
     return client_desc.version_name + ".dl";
 }
 
-std::shared_future<bool> install_xmage( Glib::ustring client_zip_name , Glib::ustring unzip_path , progress_t * progress ) noexcept( false )
+std::shared_future<bool> install_update( Glib::ustring client_zip_name , Glib::ustring unzip_path , progress_t * progress ) noexcept( false )
 {
-    std::packaged_task<bool()> task( std::bind( install_xmage_callback , client_zip_name , unzip_path , progress ) );
+    std::packaged_task<bool()> task( std::bind( install_update_callback , client_zip_name , unzip_path , progress ) );
     std::shared_future<bool> unzip_future = task.get_future();
     std::thread( std::move(task) ).detach();
 
@@ -568,13 +619,15 @@ void UpdateWork::do_update( XmageLauncher * caller )
 
     while ( update_future.wait_for( std::chrono::microseconds( 200 ) ) != std::future_status::ready )
     {
+        bool do_return = false;
         {
             std::lock_guard<std::mutex> lock( this->update_mutex );
-            if ( this->updating == false )
-            {
-                caller->update_notify();
-                return ;
-            }
+            do_return = !( this->updating );
+        }
+        if ( do_return )
+        {
+            caller->update_notify();
+            return ;
         }
     }
 
@@ -586,13 +639,15 @@ void UpdateWork::do_update( XmageLauncher * caller )
     {
         //get update information failure
         g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , e.what() );
+        bool do_return = false;
         {
             std::lock_guard<std::mutex> lock( this->update_mutex );
-            if ( this->updating == false )
-            {
-                caller->update_notify();
-                return ;
-            }
+            do_return = !( this->updating );
+        }
+        if ( do_return )
+        {
+            caller->update_notify();
+            return ;
         }
     }
 
@@ -616,6 +671,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
         {
             std::lock_guard<std::mutex> lock( this->update_mutex );
             this->prog_info = _( "no need to update" );
+            this->updating = false;
         }
         caller->update_notify();
         return ;
@@ -625,7 +681,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
     //if exists
     if ( std::filesystem::is_regular_file( get_installation_package_name( update_desc ).raw() ) == false )
     {
-        download_future = download_xmage( update_desc , &progress );
+        download_future = download_update( update_desc , &progress );
         {
             std::lock_guard<std::mutex> lock( this->update_mutex );
             this->prog_info = _( "download update" );
@@ -633,13 +689,17 @@ void UpdateWork::do_update( XmageLauncher * caller )
         caller->update_notify();
         while ( download_future.wait_for( std::chrono::microseconds( 200 ) ) != std::future_status::ready )
         {
+            bool do_return = false;
             {
                 std::lock_guard<std::mutex> lock( this->update_mutex );
-                if ( this->updating == false )
-                {
-                    caller->update_notify();
-                    return ;
-                }
+                do_return = !( this->updating );
+            }
+            if ( do_return )
+            {
+                //wait download thread exit
+                download_future.wait();
+                caller->update_notify();
+                return ;
             }
         }
         if ( download_future.get() )
@@ -674,7 +734,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
     {
         install_path = config.get_beta_path();
     }
-    auto install_future = install_xmage( get_installation_package_name( update_desc ) ,  install_path , &progress );
+    auto install_future = install_update( get_installation_package_name( update_desc ) ,  install_path , &progress );
     {
         std::lock_guard<std::mutex> lock( this->update_mutex );
         this->prog_info = _( "install update" );
@@ -682,13 +742,15 @@ void UpdateWork::do_update( XmageLauncher * caller )
     caller->update_notify();
     while ( install_future.wait_for( std::chrono::microseconds( 200 ) ) != std::future_status::ready )
     {
+        bool do_return = false;
         {
             std::lock_guard<std::mutex> lock( this->update_mutex );
-            if ( this->updating == false )
-            {
-                caller->update_notify();
-                return ;
-            }
+            do_return = !( this->updating );
+        }
+        if ( do_return )
+        {
+            caller->update_notify();
+            return ;
         }
     }
     if ( install_future.get() == false )
@@ -696,6 +758,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
         {
             std::lock_guard<std::mutex> lock( this->update_mutex );
             this->prog_info = _( "install faliure" );
+            this->updating = false;
         }
         caller->update_notify();
         return ;
@@ -721,10 +784,8 @@ void UpdateWork::do_update( XmageLauncher * caller )
 
 void UpdateWork::stop_update( void )
 {
-    {
-        std::lock_guard<std::mutex> lock( this->update_mutex );
-        this->updating = false;
-    }
+    std::lock_guard<std::mutex> lock( this->update_mutex );
+    this->updating = false;
 }
 
 void UpdateWork::get_data( bool& update_end , std::int64_t& now , std::int64_t& total , Glib::ustring& info )

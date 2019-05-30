@@ -16,15 +16,13 @@ public:
     LauncherProgressBar( BaseObjectType* cobject , const Glib::RefPtr<Gtk::Builder>& ):
         Gtk::DrawingArea( cobject ),
         prog_value( 0.0 ),
-        prog_info( "test progress info" )/* ,
-        font_desc( "Ubuntu Mono 14" ) */
+        prog_info()
     {
         this->layout = this->create_pango_layout( "0%" );
-        /* this->layout->set_font_description( this->font_desc ); */
+        this->set_size_request( 30 );
     }
     ~LauncherProgressBar()
     {
-        this->timeout_handler.disconnect();
     }
 
     void puls_prog( double value )
@@ -86,7 +84,7 @@ protected:
         const Gtk::Allocation allocation = get_allocation();
         constexpr double line_width = 2;
         cairo_context->set_line_width( line_width );
-        
+
         //background color
         cairo_context->set_source_rgb( 204/255.0 , 204/255.0 , 204/255.0 );
         cairo_context->rectangle( 0 , 0 , allocation.get_width() , allocation.get_height() );
@@ -117,8 +115,6 @@ private:
 
     Glib::ustring prog_info;
     Glib::RefPtr<Pango::Layout> layout;
-    /* Pango::FontDescription font_desc; */
-    sigc::connection timeout_handler;
 };
 
 XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::Builder>& builder ):
@@ -343,6 +339,8 @@ void XmageLauncher::enable_launch( void )
 
 void XmageLauncher::do_update( void )
 {
+    if ( this->update_process.joinable() )
+        return ;
     this->update_process = std::thread(
         [ this ]()
         {
