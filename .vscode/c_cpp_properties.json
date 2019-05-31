@@ -5,8 +5,8 @@
             "intelliSenseMode": "gcc-x64",
             "includePath": [
                 "${workspaceRoot}",
-                "D:/MSYS2/mingw64/include/c++/8.3.0",
-                "D:/MSYS2/mingw64/include/c++/8.3.0/x86_64-w64-mingw32",
+                "D:/MSYS2/mingw64/include/c++/9.1.0",
+                "D:/MSYS2/mingw64/include/c++/9.1.0/x86_64-w64-mingw32",
                 "D:/MSYS2/mingw64/include/sigc++-2.0",
                 "D:/MSYS2/mingw64/include/giomm-2.4",
                 "D:/MSYS2/mingw64/include/glibmm-2.4",

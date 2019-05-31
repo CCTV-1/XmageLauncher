@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.ac": "makefile",
         "string": "cpp",
         "array": "cpp",
         "atomic": "cpp",
@@ -51,6 +52,12 @@
         "utility": "cpp",
         "valarray": "cpp",
         "curl.h": "c",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "system.h": "c",
+        "winsock2.h": "c",
+        "windows.h": "c",
+        "windef.h": "c",
+        "minwindef.h": "c",
+        "winnt.h": "c"
     }
 }
