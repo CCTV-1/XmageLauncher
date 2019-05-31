@@ -476,6 +476,32 @@ static bool install_update_callback( Glib::ustring client_zip_name , Glib::ustri
         progress->caller->update_notify();
     }
 
+    //release installation package file tree:
+    //mage-client/
+    //  ...
+    //mage-server/
+    //  ...
+    //beta installation package file tree:
+    //xmage/
+    //  mage-client/
+    //      ...
+    //  mage-server/
+    //      ...
+    //  ...
+    //so,remove some official launcher file,move xmage-client,xmage-server directory to parent directory
+    std::filesystem::path install_root( unzip_path.raw() );
+    for ( auto& file : std::filesystem::directory_iterator( install_root ) )
+    {
+        if ( file.is_directory() == false )
+            std::filesystem::remove( file );
+    }
+    if ( std::filesystem::is_directory( install_root/"xmage" ) )
+    {
+        std::filesystem::rename( install_root/"xmage/mage-client" , install_root/"mage-client" );
+        std::filesystem::rename( install_root/"xmage/mage-server" , install_root/"mage-server" );
+        std::filesystem::remove_all( install_root/"xmage" );
+    }
+
     return true;
 }
 
@@ -770,28 +796,10 @@ void UpdateWork::do_update( XmageLauncher * caller )
     caller->update_notify();
     if ( type == XmageType::Release )
     {
-        //release installation package file tree:
-        //xmage-clinet/
-        //xmage-server/
         config.set_release_version( update_desc.version_name );
     }
     else
     {
-        //beta installation package file tree:
-        //xmage/
-        //  xmage-clinet/
-        //  xmage-server/
-        //some official launcher file
-        //so,remove some official launcher file,move xmage-clinet,xmage-server directory to parent directory
-        std::filesystem::path beta_root( config.get_beta_path().raw() );
-        for ( auto& file : std::filesystem::directory_iterator( beta_root ) )
-        {
-            if ( file.is_directory() == false )
-                std::filesystem::remove( file );
-        }
-        std::filesystem::rename( beta_root/"xmage/xmage-clinet" , beta_root );
-        std::filesystem::rename( beta_root/"xmage/xmage-clinet" , beta_root );
-        std::filesystem::remove_all( beta_root/"xmage" );
         config.set_beta_version( update_desc.version_name );
     }
     std::filesystem::remove( get_installation_package_name( update_desc ).raw() );
