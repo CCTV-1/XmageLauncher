@@ -1,5 +1,3 @@
-#include <string>
-
 #include <curl/curl.h>
 #include <jansson.h>
 #include <gtkmm.h>
@@ -15,7 +13,7 @@ int main ( int argc , char * argv[] )
     json_set_alloc_funcs( malloc , free );
     if ( curl_global_init( CURL_GLOBAL_ALL ) != 0 )
     {
-        g_log( __func__ , G_LOG_LEVEL_ERROR , "network module initial fault" );
+        g_log( __func__ , G_LOG_LEVEL_ERROR , "network module initial faliure" );
     }
 
     auto app = Gtk::Application::create( argc , argv );

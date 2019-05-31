@@ -139,11 +139,11 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     Gtk::Button * xmage_button;
     builder->get_widget( "LauncherXmage" , xmage_button );
     xmage_button->signal_clicked().connect(
-            [ this ]()
-            {
-                this->launch_client();
-                this->launch_server();
-            }
+        [ this ]()
+        {
+            this->launch_client();
+            this->launch_server();
+        }
     );
 
     //Setting menu dialog
@@ -164,20 +164,20 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
         proxy_type->set_active_id( "None" );
     }
     proxy_type->signal_changed().connect(
-            [ this , proxy_type ]()
+        [ this , proxy_type ]()
+        {
+            Glib::ustring proxy_string = proxy_type->get_active_id();
+            Glib::ustring diff_string = proxy_string.lowercase();
+            if ( diff_string.compare( "none" ) == 0 )
             {
-                Glib::ustring proxy_string = proxy_type->get_active_id();
-                Glib::ustring diff_string = proxy_string.lowercase();
-                if ( diff_string.compare( "none" ) == 0 )
-                {
-                    this->config.set_using_proxy( false );
-                }
-                else
-                {
-                    this->config.set_using_proxy( true );
-                    this->config.set_proxy_scheme( proxy_string );
-                }
+                this->config.set_using_proxy( false );
             }
+            else
+            {
+                this->config.set_using_proxy( true );
+                this->config.set_proxy_scheme( proxy_string );
+            }
+        }
     );
     Gtk::Entry * proxy_host;
     builder->get_widget( "ProxyHost" , proxy_host );

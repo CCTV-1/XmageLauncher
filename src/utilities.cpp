@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <set>
 #include <thread>
 
 #include <zip.h>
@@ -483,14 +484,13 @@ bool set_proxy( Glib::ustring scheme , Glib::ustring hostname , std::uint32_t po
     Glib::ustring proxy_desc;
     Glib::ustring diff_scheme = scheme.lowercase();
 
-    const std::map<Glib::ustring,bool> scheme_map(
-    {
-        {   "http"    , true   },
-        {   "https"   , true   },
-        {   "socks4"  , true   },
-        {   "socks4a" , true   },
-        {   "socks5"  , true   },
-        {   "socks5h" , true   },
+    const std::set<Glib::ustring> scheme_map({
+        "http"   ,
+        "https"  ,
+        "socks4" ,
+        "socks4a",
+        "socks5" ,
+        "socks5h",
     });
 
     if ( scheme_map.find( diff_scheme ) == scheme_map.end() )
@@ -769,9 +769,31 @@ void UpdateWork::do_update( XmageLauncher * caller )
     }
     caller->update_notify();
     if ( type == XmageType::Release )
+    {
+        //release installation package file tree:
+        //xmage-clinet/
+        //xmage-server/
         config.set_release_version( update_desc.version_name );
+    }
     else
+    {
+        //beta installation package file tree:
+        //xmage/
+        //  xmage-clinet/
+        //  xmage-server/
+        //some official launcher file
+        //so,remove some official launcher file,move xmage-clinet,xmage-server directory to parent directory
+        std::filesystem::path beta_root( config.get_beta_path().raw() );
+        for ( auto& file : std::filesystem::directory_iterator( beta_root ) )
+        {
+            if ( file.is_directory() == false )
+                std::filesystem::remove( file );
+        }
+        std::filesystem::rename( beta_root/"xmage/xmage-clinet" , beta_root );
+        std::filesystem::rename( beta_root/"xmage/xmage-clinet" , beta_root );
+        std::filesystem::remove_all( beta_root/"xmage" );
         config.set_beta_version( update_desc.version_name );
+    }
     std::filesystem::remove( get_installation_package_name( update_desc ).raw() );
 
     //update end,enable launch button
