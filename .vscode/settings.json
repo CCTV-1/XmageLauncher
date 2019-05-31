@@ -58,6 +58,9 @@
         "windows.h": "c",
         "windef.h": "c",
         "minwindef.h": "c",
-        "winnt.h": "c"
+        "winnt.h": "c",
+        "bit": "cpp",
+        "map": "cpp",
+        "set": "cpp"
     }
 }
