@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-05-21 22:29+0800\n"
+"POT-Creation-Date: 2019-05-31 12:27+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -30,11 +30,11 @@ msgid "Setting"
 msgstr ""
 
 #: resources/Launcher.ui.h:4
-msgid "proxy type"
+msgid "XmageLauncher"
 msgstr ""
 
 #: resources/Launcher.ui.h:5
-msgid "proxy port"
+msgid "jvm initial heap size"
 msgstr ""
 
 #: resources/Launcher.ui.h:6
@@ -42,86 +42,98 @@ msgid "jvm maximum heap size"
 msgstr ""
 
 #: resources/Launcher.ui.h:7
-msgid "proxy host"
+msgid "GameSetting"
 msgstr ""
 
 #: resources/Launcher.ui.h:8
-msgid "jvm initial heap size"
-msgstr ""
-
-#: resources/Launcher.ui.h:9
-msgid "release xmage install path"
-msgstr ""
-
-#: resources/Launcher.ui.h:10
-msgid "beta xmage install path"
-msgstr ""
-
-#: resources/Launcher.ui.h:11
-msgid "update source"
-msgstr ""
-
-#: resources/Launcher.ui.h:12
-msgid "XmageLauncher"
-msgstr ""
-
-#: resources/Launcher.ui.h:13
 msgid "LauncherClient"
 msgstr ""
 
-#: resources/Launcher.ui.h:14
+#: resources/Launcher.ui.h:9
 msgid "LauncherServer"
 msgstr ""
 
-#: resources/Launcher.ui.h:15
+#: resources/Launcher.ui.h:10
 msgid "LauncherXmage"
 msgstr ""
 
-#: src/launcher.cpp:155
+#: resources/Launcher.ui.h:11
+msgid "proxy type"
+msgstr ""
+
+#: resources/Launcher.ui.h:12
+msgid "proxy host"
+msgstr ""
+
+#: resources/Launcher.ui.h:13
+msgid "proxy port"
+msgstr ""
+
+#: resources/Launcher.ui.h:14
+msgid "UpdateSetting"
+msgstr ""
+
+#: resources/Launcher.ui.h:15
+msgid "release xmage install path"
+msgstr ""
+
+#: resources/Launcher.ui.h:16
+msgid "beta xmage install path"
+msgstr ""
+
+#: resources/Launcher.ui.h:17
+msgid "update source"
+msgstr ""
+
+#: resources/Launcher.ui.h:18
+msgid "LauncherSetting"
+msgstr ""
+
+#: src/launcher.cpp:151
 msgid "close menu"
 msgstr ""
 
-#: src/utilities.cpp:559
+#: src/utilities.cpp:610
 msgid "check for updates"
 msgstr ""
 
-#: src/utilities.cpp:609
+#: src/utilities.cpp:664
 #, c-format
 msgid "last xmage version:'%s',download url:'%s'."
 msgstr ""
 
-#: src/utilities.cpp:612
+#: src/utilities.cpp:667
 msgid "exist new xmage,now download."
 msgstr ""
 
-#: src/utilities.cpp:618
+#: src/utilities.cpp:673
 msgid "no need to update"
 msgstr ""
 
-#: src/utilities.cpp:631
+#: src/utilities.cpp:687
 msgid "download update"
 msgstr ""
 
-#: src/utilities.cpp:649
+#: src/utilities.cpp:709
 msgid "download success,install..."
 msgstr ""
 
-#: src/utilities.cpp:658
+#: src/utilities.cpp:718
 msgid "download failure"
 msgstr ""
 
-#: src/utilities.cpp:666
+#: src/utilities.cpp:726
 msgid "using local installation package"
 msgstr ""
 
-#: src/utilities.cpp:680
+#: src/utilities.cpp:740
 msgid "install update"
 msgstr ""
 
-#: src/utilities.cpp:698
+#: src/utilities.cpp:760
 msgid "install faliure"
 msgstr ""
 
-#: src/utilities.cpp:705
+#: src/utilities.cpp:768
 msgid "install success"
 msgstr ""
