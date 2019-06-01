@@ -6,6 +6,11 @@ CURL_FLAGS=$(shell pkg-config --cflags --libs libcurl)
 GTKMM_FLAGS=$(shell pkg-config --cflags --libs gtkmm-3.0)
 GLIBMM_FLAGS=$(shell pkg-config --cflags glibmm-2.4)
 JANSSON_FLAGS=$(shell pkg-config --cflags --libs jansson)
+OS= $(shell uname -o)
+
+ifeq ($(OS),Msys)
+	FLAGS += -mwindows
+endif
 
 ifeq ($(CC),g++)
 	FLAGS+=-lstdc++fs
