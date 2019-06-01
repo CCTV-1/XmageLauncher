@@ -273,8 +273,8 @@ void XmageLauncher::launch_client( void )
         //"java -Xms1024m -Xmx1024m -XX:MaxPermSize=384m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -jar .\lib\mage-client-1.4.35.jar"
         Glib::ustring version = this->config.get_active_xmage_version();
 
-        Glib::ustring xms_opt = Glib::ustring( "-Xms" ) + std::to_string( this->config.get_jvm_xms() ) + "M";
-        Glib::ustring xmx_opt = Glib::ustring( "-Xmx" ) + std::to_string( this->config.get_jvm_xmx() ) + "M";
+        Glib::ustring xms_opt = Glib::ustring( "-Xms" ) + std::to_string( this->config.get_jvm_xms() ) + "m";
+        Glib::ustring xmx_opt = Glib::ustring( "-Xmx" ) + std::to_string( this->config.get_jvm_xmx() ) + "m";
         std::vector<Glib::ustring> argvs({
             this->config.get_javaw_path() , xms_opt , xmx_opt , 
             "-XX:MaxPermSize=384m" , "-XX:+UseConcMarkSweepGC" ,
@@ -290,8 +290,8 @@ void XmageLauncher::launch_server( void )
         //"java -Xms256M -Xmx512M -XX:MaxPermSize=256m -Djava.security.policy=./config/security.policy -Djava.util.logging.config.file=./config/logging.config -Dlog4j.configuration=file:./config/log4j.properties -jar ./lib/mage-server-1.4.35.jar"
         Glib::ustring version = this->config.get_active_xmage_version();
 
-        Glib::ustring xms_opt = Glib::ustring( "-Xms" ) + std::to_string( this->config.get_jvm_xms() ) + "M";
-        Glib::ustring xmx_opt = Glib::ustring( "-Xmx" ) + std::to_string( this->config.get_jvm_xmx() ) + "M";
+        Glib::ustring xms_opt = Glib::ustring( "-Xms" ) + std::to_string( this->config.get_jvm_xms() ) + "m";
+        Glib::ustring xmx_opt = Glib::ustring( "-Xmx" ) + std::to_string( this->config.get_jvm_xmx() ) + "m";
         std::vector<Glib::ustring> argvs({
             this->config.get_java_path() , xms_opt , xmx_opt ,"-XX:MaxPermSize=384m" , "-Djava.security.policy=./config/security.policy",
             "-Djava.util.logging.config.file=./config/logging.config" , "-Dlog4j.configuration=file:./config/log4j.properties"
