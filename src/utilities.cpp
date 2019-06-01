@@ -488,13 +488,13 @@ static bool install_update_callback( Glib::ustring client_zip_name , Glib::ustri
     //  mage-server/
     //      ...
     //  ...
-    //so,remove some official launcher file,move xmage-client,xmage-server directory to parent directory
+    //so,move xmage-client,xmage-server directory to parent directory
     std::filesystem::path install_root( unzip_path.raw() );
-    for ( auto& file : std::filesystem::directory_iterator( install_root ) )
-    {
-        if ( file.is_directory() == false )
-            std::filesystem::remove( file );
-    }
+    //for ( auto& file : std::filesystem::directory_iterator( install_root ) )
+    //{
+    //    if ( file.is_directory() == false )
+    //        std::filesystem::remove( file );
+    //}
     if ( std::filesystem::is_directory( install_root/"xmage" ) )
     {
         std::filesystem::rename( install_root/"xmage/mage-client" , install_root/"mage-client" );
