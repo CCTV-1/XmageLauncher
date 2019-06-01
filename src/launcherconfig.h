@@ -44,6 +44,8 @@ public:
 
     //only getter
     Glib::ustring get_java_path( void );
+    //olny Win32 exists javaw,other os return get_java_path()
+    Glib::ustring get_javaw_path( void );
     Glib::ustring get_beta_client( void );
     Glib::ustring get_beta_server( void );
     Glib::ustring get_release_client( void );

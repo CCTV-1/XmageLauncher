@@ -47,6 +47,16 @@ Glib::ustring LauncherConfig::get_java_path()
 {
     return Glib::find_program_in_path( "java" );
 }
+
+Glib::ustring LauncherConfig::get_javaw_path()
+{
+    #ifdef G_OS_WIN32
+        return Glib::find_program_in_path( "javaw" );
+    #else
+        return this->get_java_path();
+    #endif
+}
+
 Glib::ustring LauncherConfig::get_beta_version()
 {
     if ( !this->config_file.has_group( "Beta" ) || !this->config_file.has_key( "Beta" , "version" ) )
