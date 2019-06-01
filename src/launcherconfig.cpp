@@ -59,7 +59,7 @@ Glib::ustring LauncherConfig::get_beta_path()
 {
     if ( !this->config_file.has_group( "Beta" ) || !this->config_file.has_key( "Beta" , "installed_path" ) )
     {
-        this->config_file.set_string( "Beta" , "installed_path" , "BetaXmage" );
+        this->config_file.set_string( "Beta" , "installed_path" , "Xmage-Beta" );
     }
     return this->config_file.get_string( "Beta" , "installed_path" );
 }
@@ -75,7 +75,7 @@ Glib::ustring LauncherConfig::get_release_path()
 {
     if ( !this->config_file.has_group( "Release" ) || !this->config_file.has_key( "Release" , "installed_path" ) )
     {
-        this->config_file.set_string( "Release" , "installed_path" , "ReleaseXmage" );
+        this->config_file.set_string( "Release" , "installed_path" , "Xmage-Release" );
     }
     return this->config_file.get_string( "Release" , "installed_path" );
 }
