@@ -248,6 +248,7 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
         {
             Glib::ustring source = active_xmage->get_active_id();
             this->config.set_active_xmage( string_to_xmagetype( source ) );
+            this->do_update();
         }
     );
 
@@ -275,7 +276,7 @@ void XmageLauncher::launch_client( void )
         Glib::ustring xms_opt = Glib::ustring( "-Xms" ) + std::to_string( this->config.get_jvm_xms() ) + "M";
         Glib::ustring xmx_opt = Glib::ustring( "-Xmx" ) + std::to_string( this->config.get_jvm_xmx() ) + "M";
         std::vector<Glib::ustring> argvs({
-            this->config.get_java_path() , xms_opt , xmx_opt , 
+            this->config.get_javaw_path() , xms_opt , xmx_opt , 
             "-XX:MaxPermSize=384m" , "-XX:+UseConcMarkSweepGC" ,
             "-XX:+CMSClassUnloadingEnabled" , "-jar" , "./lib/mage-client-" + version + ".jar"
         });
@@ -339,8 +340,13 @@ void XmageLauncher::enable_launch( void )
 
 void XmageLauncher::do_update( void )
 {
+    //stop old update thread
     if ( this->update_process.joinable() )
-        return ;
+    {
+        this->update.stop_update();
+        this->update_process.join();
+    }
+    //new update thread
     this->update_process = std::thread(
         [ this ]()
         {
