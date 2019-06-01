@@ -177,12 +177,15 @@ Glib::ustring LauncherConfig::get_beta_mage_version( void )
     Glib::ustring beta_version = this->get_beta_version();
 
     std::uint32_t dot_num = 0;
-    for ( std::uint32_t i = 0 ; dot_num <=2 && i <= beta_version.size() ; i++ )
+    for ( std::uint32_t i = 0 ; dot_num <= 2 && i <= beta_version.size() ; i++ )
     {
         if ( beta_version[i] == '.' )
             dot_num++;
         mage_version += beta_version[i];
     }
+    //1.4.35.
+    mage_version = mage_version.substr( 0 , mage_version.size() - 1 );
+    //1.4.35
     return mage_version;
 }
 Glib::ustring LauncherConfig::get_active_xmage_version( void )
