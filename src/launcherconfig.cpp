@@ -146,15 +146,27 @@ XmageType LauncherConfig::get_active_xmage()
     return static_cast<XmageType>( this->config_file.get_integer( "Setting" , "active_xmage" ) );
 }
 
-
 //only getter
+
+//release installation package file tree:
+//mage-client/
+//  ...
+//mage-server/
+//  ...
+//beta installation package file tree:
+//xmage/
+//  mage-client/
+//      ...
+//  mage-server/
+//      ...
+//  ...
 Glib::ustring LauncherConfig::get_beta_client()
 {
-    return this->get_beta_path() + "/mage-client/";
+    return this->get_beta_path() + "/xmage/mage-client/";
 }
 Glib::ustring LauncherConfig::get_beta_server()
 {
-    return this->get_beta_path() + "/mage-server/";
+    return this->get_beta_path() + "/xmage/mage-server/";
 }
 Glib::ustring LauncherConfig::get_release_client()
 {

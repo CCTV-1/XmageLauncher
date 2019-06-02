@@ -477,38 +477,31 @@ static bool install_update_callback( Glib::ustring client_zip_name , Glib::ustri
         progress->caller->update_notify();
     }
 
-    //release installation package file tree:
-    //mage-client/
-    //  ...
-    //mage-server/
-    //  ...
-    //beta installation package file tree:
-    //xmage/
-    //  mage-client/
-    //      ...
-    //  mage-server/
-    //      ...
-    //  ...
-    //so,move xmage-client,xmage-server directory to parent directory
-    std::filesystem::path install_root( unzip_path.raw() );
-    //for ( auto& file : std::filesystem::directory_iterator( install_root ) )
+    //do not make assumptions about the user file tree,so change to config return root/xmage/mage-client(Beta) root/mage-client(Release)
+    //try
     //{
-    //    if ( file.is_directory() == false )
-    //        std::filesystem::remove( file );
+    //    std::filesystem::path install_root( unzip_path.raw() );
+
+    //    //remove old install
+    //    if ( std::filesystem::exists( install_root/"mage-client" ) )
+    //        std::filesystem::remove_all( install_root/"mage-client" );
+    //    if ( std::filesystem::exists( install_root/"mage-server" ) )
+    //        std::filesystem::remove_all( install_root/"mage-server" );
+
+    //    if ( std::filesystem::is_directory( install_root/"xmage" ) )
+    //    {
+    //        std::filesystem::rename( install_root/"xmage/mage-client" , install_root/"mage-client" );
+    //        std::filesystem::rename( install_root/"xmage/mage-server" , install_root/"mage-server" );
+    //        //when user set root to /home/user/,before exitst /home/user/xmage/image or other resources
+    //        if ( std::filesystem::is_empty( install_root/"xmage" ) )
+    //            std::filesystem::remove_all( install_root/"xmage" );
+    //    }
     //}
-    if ( std::filesystem::is_directory( install_root/"xmage" ) )
-    {
-        try
-        {
-            std::filesystem::rename( install_root/"xmage/mage-client" , install_root/"mage-client" );
-            std::filesystem::rename( install_root/"xmage/mage-server" , install_root/"mage-server" );
-            std::filesystem::remove_all( install_root/"xmage" );
-        }
-        catch ( const std::exception& e )
-        {
-            g_log( __func__ , G_LOG_LEVEL_MESSAGE , e.what() );
-        }
-    }
+    //catch ( const std::exception& e )
+    //{
+    //    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "except message:'%s',install root path:'%s'." , e.what() , unzip_path.c_str() );
+    //    return false;
+    //}
 
     return true;
 }
