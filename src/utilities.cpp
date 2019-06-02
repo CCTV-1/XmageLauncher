@@ -377,7 +377,8 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
         }
         if ( do_return )
         {
-            return true;
+            //stop update,update faliure.
+            return false;
         }
 
         if ( status_code != CURLM_OK )
@@ -632,10 +633,31 @@ void UpdateWork::do_update( XmageLauncher * caller )
     //start update,disable launch button
     {
         std::lock_guard<std::mutex> lock( this->update_mutex );
-        this->updating = true;
         this->prog_info = _( "check for updates" );
     }
-    caller->update_notify();
+
+    //return ; call deconstruct,don't need call caller->update_notify();
+    std::shared_ptr<void> lock_launch(
+        [ this , caller ]()
+        {
+            {
+                std::lock_guard<std::mutex> lock( this->update_mutex );
+                this->updating = true;
+            }
+            caller->update_notify();
+            return nullptr;
+        }(),
+        [ this , caller ]( void * )
+        {
+            {
+                std::lock_guard<std::mutex> lock( this->update_mutex );
+                this->prog_total = 0;
+                this->updating = false;
+            }
+            caller->update_notify();
+        }
+    );
+
     config_t& config = caller->get_config();
     XmageType type = config.get_active_xmage();
     progress_t progress = { caller , this };
@@ -652,7 +674,6 @@ void UpdateWork::do_update( XmageLauncher * caller )
         }
         if ( do_return )
         {
-            caller->update_notify();
             return ;
         }
     }
@@ -665,16 +686,8 @@ void UpdateWork::do_update( XmageLauncher * caller )
     {
         //get update information failure
         g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , e.what() );
-        bool do_return = false;
-        {
-            std::lock_guard<std::mutex> lock( this->update_mutex );
-            do_return = !( this->updating );
-        }
-        if ( do_return )
-        {
-            caller->update_notify();
-            return ;
-        }
+        //don't need stop request,check update faliure,to return end update.
+        return ;
     }
 
     Glib::ustring version;
@@ -697,9 +710,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
         {
             std::lock_guard<std::mutex> lock( this->update_mutex );
             this->prog_info = _( "no need to update" );
-            this->updating = false;
         }
-        caller->update_notify();
         return ;
     }
 
@@ -724,10 +735,11 @@ void UpdateWork::do_update( XmageLauncher * caller )
             {
                 //wait download thread exit
                 download_future.wait();
-                caller->update_notify();
                 return ;
             }
         }
+
+        g_log( __func__ , G_LOG_LEVEL_MESSAGE , "break download status check,future value:%d" , download_future.get() );
         if ( download_future.get() )
         {
             {
@@ -743,7 +755,6 @@ void UpdateWork::do_update( XmageLauncher * caller )
                 std::lock_guard<std::mutex> lock( this->update_mutex );
                 this->prog_info = _( "download failure" );
             }
-            caller->update_notify();
             return ;
         }
     }
@@ -751,6 +762,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
     {
         g_log( __func__ , G_LOG_LEVEL_MESSAGE , _( "using local installation package" ) );
     }
+
     Glib::ustring install_path;
     if ( type == XmageType::Release )
     {
@@ -760,11 +772,11 @@ void UpdateWork::do_update( XmageLauncher * caller )
     {
         install_path = config.get_beta_path();
     }
-    auto install_future = install_update( get_installation_package_name( update_desc ) ,  install_path , &progress );
     {
         std::lock_guard<std::mutex> lock( this->update_mutex );
         this->prog_info = _( "install update" );
     }
+    auto install_future = install_update( get_installation_package_name( update_desc ) ,  install_path , &progress );
     caller->update_notify();
     while ( install_future.wait_for( std::chrono::microseconds( 200 ) ) != std::future_status::ready )
     {
@@ -775,7 +787,6 @@ void UpdateWork::do_update( XmageLauncher * caller )
         }
         if ( do_return )
         {
-            caller->update_notify();
             return ;
         }
     }
@@ -784,16 +795,16 @@ void UpdateWork::do_update( XmageLauncher * caller )
         {
             std::lock_guard<std::mutex> lock( this->update_mutex );
             this->prog_info = _( "install faliure" );
-            this->updating = false;
         }
-        caller->update_notify();
         return ;
     }
+
     {
         std::lock_guard<std::mutex> lock( this->update_mutex );
         this->prog_info = _( "install success" );
     }
     caller->update_notify();
+    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "set install version:%s" , update_desc.version_name.c_str() );
     if ( type == XmageType::Release )
     {
         config.set_release_version( update_desc.version_name );
@@ -804,12 +815,6 @@ void UpdateWork::do_update( XmageLauncher * caller )
     }
     std::filesystem::remove( get_installation_package_name( update_desc ).raw() );
 
-    //update end,enable launch button
-    {
-        std::lock_guard<std::mutex> lock( this->update_mutex );
-        this->updating = false;
-    }
-    caller->update_notify();
 }
 
 void UpdateWork::stop_update( void )
