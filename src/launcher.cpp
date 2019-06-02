@@ -192,7 +192,7 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     Gtk::SpinButton * proxy_port;
     builder->get_widget( "ProxyPort" , proxy_port );
     proxy_port->set_value( config.get_proxy_port() );
-    proxy_port->signal_changed().connect(
+    proxy_port->signal_value_changed().connect(
         [ this , proxy_port ]()
         {
             double port_value = proxy_port->get_value();
@@ -202,7 +202,7 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     Gtk::SpinButton * xms_opt;
     builder->get_widget( "XmsOpt" , xms_opt );
     xms_opt->set_value( config.get_jvm_xms() );
-    xms_opt->signal_changed().connect(
+    xms_opt->signal_value_changed().connect(
         [ this , xms_opt ]()
         {
             double xms_value = xms_opt->get_value();
@@ -212,7 +212,7 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     Gtk::SpinButton * xmx_opt;
     builder->get_widget( "XmxOpt" , xmx_opt );
     xmx_opt->set_value( this->config.get_jvm_xmx() );
-    xmx_opt->signal_changed().connect(
+    xmx_opt->signal_value_changed().connect(
         [ this , xmx_opt ]()
         {
             double xmx_value = xmx_opt->get_value();
