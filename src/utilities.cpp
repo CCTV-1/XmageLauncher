@@ -498,9 +498,16 @@ static bool install_update_callback( Glib::ustring client_zip_name , Glib::ustri
     //}
     if ( std::filesystem::is_directory( install_root/"xmage" ) )
     {
-        std::filesystem::rename( install_root/"xmage/mage-client" , install_root/"mage-client" );
-        std::filesystem::rename( install_root/"xmage/mage-server" , install_root/"mage-server" );
-        std::filesystem::remove_all( install_root/"xmage" );
+        try
+        {
+            std::filesystem::rename( install_root/"xmage/mage-client" , install_root/"mage-client" );
+            std::filesystem::rename( install_root/"xmage/mage-server" , install_root/"mage-server" );
+            std::filesystem::remove_all( install_root/"xmage" );
+        }
+        catch ( const std::exception& e )
+        {
+            g_log( __func__ , G_LOG_LEVEL_MESSAGE , e.what() );
+        }
     }
 
     return true;
@@ -739,7 +746,6 @@ void UpdateWork::do_update( XmageLauncher * caller )
             }
         }
 
-        g_log( __func__ , G_LOG_LEVEL_MESSAGE , "break download status check,future value:%d" , download_future.get() );
         if ( download_future.get() )
         {
             {
@@ -804,7 +810,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
         this->prog_info = _( "install success" );
     }
     caller->update_notify();
-    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "set install version:%s" , update_desc.version_name.c_str() );
+
     if ( type == XmageType::Release )
     {
         config.set_release_version( update_desc.version_name );
