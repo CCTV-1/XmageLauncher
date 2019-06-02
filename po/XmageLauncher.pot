@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-05-31 12:27+0800\n"
+"POT-Creation-Date: 2019-06-01 23:05+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -30,110 +30,114 @@ msgid "Setting"
 msgstr ""
 
 #: resources/Launcher.ui.h:4
-msgid "XmageLauncher"
-msgstr ""
-
-#: resources/Launcher.ui.h:5
-msgid "jvm initial heap size"
-msgstr ""
-
-#: resources/Launcher.ui.h:6
-msgid "jvm maximum heap size"
-msgstr ""
-
-#: resources/Launcher.ui.h:7
-msgid "GameSetting"
-msgstr ""
-
-#: resources/Launcher.ui.h:8
-msgid "LauncherClient"
-msgstr ""
-
-#: resources/Launcher.ui.h:9
-msgid "LauncherServer"
-msgstr ""
-
-#: resources/Launcher.ui.h:10
-msgid "LauncherXmage"
-msgstr ""
-
-#: resources/Launcher.ui.h:11
 msgid "proxy type"
 msgstr ""
 
-#: resources/Launcher.ui.h:12
+#: resources/Launcher.ui.h:5
 msgid "proxy host"
 msgstr ""
 
-#: resources/Launcher.ui.h:13
+#: resources/Launcher.ui.h:6
 msgid "proxy port"
 msgstr ""
 
-#: resources/Launcher.ui.h:14
+#: resources/Launcher.ui.h:7
 msgid "UpdateSetting"
 msgstr ""
 
-#: resources/Launcher.ui.h:15
+#: resources/Launcher.ui.h:8
+msgid "XmageLauncher"
+msgstr ""
+
+#: resources/Launcher.ui.h:9
+msgid "AdvancedSetting"
+msgstr ""
+
+#: resources/Launcher.ui.h:10
+msgid "jvm initial heap size"
+msgstr ""
+
+#: resources/Launcher.ui.h:11
+msgid "jvm maximum heap size"
+msgstr ""
+
+#: resources/Launcher.ui.h:12
+msgid "GameSetting"
+msgstr ""
+
+#: resources/Launcher.ui.h:13
 msgid "release xmage install path"
 msgstr ""
 
-#: resources/Launcher.ui.h:16
+#: resources/Launcher.ui.h:14
 msgid "beta xmage install path"
 msgstr ""
 
-#: resources/Launcher.ui.h:17
+#: resources/Launcher.ui.h:15
 msgid "update source"
 msgstr ""
 
-#: resources/Launcher.ui.h:18
+#: resources/Launcher.ui.h:16
 msgid "LauncherSetting"
+msgstr ""
+
+#: resources/Launcher.ui.h:17
+msgid "LauncherXmage"
+msgstr ""
+
+#: resources/Launcher.ui.h:18
+msgid "LauncherClient"
+msgstr ""
+
+#: resources/Launcher.ui.h:19
+msgid "LauncherServer"
 msgstr ""
 
 #: src/launcher.cpp:151
 msgid "close menu"
 msgstr ""
 
-#: src/utilities.cpp:610
+#: src/utilities.cpp:636
 msgid "check for updates"
 msgstr ""
 
-#: src/utilities.cpp:664
+#: src/utilities.cpp:704
 #, c-format
 msgid "last xmage version:'%s',download url:'%s'."
 msgstr ""
 
-#: src/utilities.cpp:667
+#: src/utilities.cpp:707
 msgid "exist new xmage,now download."
 msgstr ""
 
-#: src/utilities.cpp:673
+#: src/utilities.cpp:713
 msgid "no need to update"
 msgstr ""
 
-#: src/utilities.cpp:687
+#: src/utilities.cpp:727
 msgid "download update"
 msgstr ""
 
-#: src/utilities.cpp:709
+#: src/utilities.cpp:751
 msgid "download success,install..."
 msgstr ""
 
-#: src/utilities.cpp:718
+#: src/utilities.cpp:760
 msgid "download failure"
 msgstr ""
 
-#: src/utilities.cpp:726
+#: src/utilities.cpp:768
 msgid "using local installation package"
 msgstr ""
 
-#: src/utilities.cpp:740
+#: src/utilities.cpp:782
 msgid "install update"
 msgstr ""
 
-#: src/utilities.cpp:760
+#: src/utilities.cpp:803
 msgid "install faliure"
 msgstr ""
 
-#: src/utilities.cpp:768
+#: src/utilities.cpp:812
 msgid "install success"
 msgstr ""

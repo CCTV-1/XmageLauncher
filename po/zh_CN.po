@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-05-31 12:27+0800\n"
+"POT-Creation-Date: 2019-06-01 23:05+0800\n"
 "PO-Revision-Date: 2019-05-05 11:57+0800\n"
 "Last-Translator: <EMAIL@ADDRESS>\n"
 "Language-Team: Chinese (simplified)\n"
@@ -30,111 +30,115 @@ msgid "Setting"
 msgstr "设置"
 
 #: resources/Launcher.ui.h:4
-msgid "XmageLauncher"
-msgstr "Xmage启动器"
-
-#: resources/Launcher.ui.h:5
-msgid "jvm initial heap size"
-msgstr "Xmage初始占用内存"
-
-#: resources/Launcher.ui.h:6
-msgid "jvm maximum heap size"
-msgstr "Xmage最大占用内存"
-
-#: resources/Launcher.ui.h:7
-msgid "GameSetting"
-msgstr "游戏设置"
-
-#: resources/Launcher.ui.h:8
-msgid "LauncherClient"
-msgstr "启动客户端"
-
-#: resources/Launcher.ui.h:9
-msgid "LauncherServer"
-msgstr "启动服务端"
-
-#: resources/Launcher.ui.h:10
-msgid "LauncherXmage"
-msgstr "启动Xmage"
-
-#: resources/Launcher.ui.h:11
 msgid "proxy type"
 msgstr "代理类型"
 
-#: resources/Launcher.ui.h:12
+#: resources/Launcher.ui.h:5
 msgid "proxy host"
 msgstr "代理主机"
 
-#: resources/Launcher.ui.h:13
+#: resources/Launcher.ui.h:6
 msgid "proxy port"
 msgstr "代理端口"
 
-#: resources/Launcher.ui.h:14
+#: resources/Launcher.ui.h:7
 msgid "UpdateSetting"
 msgstr "更新设置"
 
-#: resources/Launcher.ui.h:15
-msgid "release xmage install path"
-msgstr "发布版Xmage安装目录"
+#: resources/Launcher.ui.h:8
+msgid "XmageLauncher"
+msgstr "Xmage启动器"
 
-#: resources/Launcher.ui.h:16
+#: resources/Launcher.ui.h:9
+msgid "AdvancedSetting"
+msgstr "高级设置"
+
+#: resources/Launcher.ui.h:10
+msgid "jvm initial heap size"
+msgstr "Xmage初始占用内存"
+
+#: resources/Launcher.ui.h:11
+msgid "jvm maximum heap size"
+msgstr "Xmage最大占用内存"
+
+#: resources/Launcher.ui.h:12
+msgid "GameSetting"
+msgstr "游戏设置"
+
+#: resources/Launcher.ui.h:13
+msgid "release xmage install path"
+msgstr "正式版Xmage安装目录"
+
+#: resources/Launcher.ui.h:14
 msgid "beta xmage install path"
 msgstr "测试版Xmage安装目录"
 
-#: resources/Launcher.ui.h:17
+#: resources/Launcher.ui.h:15
 msgid "update source"
 msgstr "更新源"
 
-#: resources/Launcher.ui.h:18
+#: resources/Launcher.ui.h:16
 msgid "LauncherSetting"
 msgstr "启动器设置"
+
+#: resources/Launcher.ui.h:17
+msgid "LauncherXmage"
+msgstr "单机测试"
+
+#: resources/Launcher.ui.h:18
+msgid "LauncherClient"
+msgstr "联机对战"
+
+#: resources/Launcher.ui.h:19
+msgid "LauncherServer"
+msgstr "本地服务器"
 
 #: src/launcher.cpp:151
 msgid "close menu"
 msgstr "关闭菜单"
 
-#: src/utilities.cpp:610
+#: src/utilities.cpp:636
 msgid "check for updates"
 msgstr "检查更新"
 
-#: src/utilities.cpp:664
+#: src/utilities.cpp:704
 #, c-format
 msgid "last xmage version:'%s',download url:'%s'."
 msgstr "最新的Xmage版本为:'%s',下载链接为:'%s'."
 
-#: src/utilities.cpp:667
+#: src/utilities.cpp:707
 msgid "exist new xmage,now download."
 msgstr "存在新版本Xmage,现在下载更新."
 
-#: src/utilities.cpp:673
+#: src/utilities.cpp:713
 msgid "no need to update"
 msgstr "不需要更新"
 
-#: src/utilities.cpp:687
+#: src/utilities.cpp:727
 msgid "download update"
 msgstr "下载更新"
 
-#: src/utilities.cpp:709
+#: src/utilities.cpp:751
 msgid "download success,install..."
 msgstr "下载成功,安装中"
 
-#: src/utilities.cpp:718
+#: src/utilities.cpp:760
 msgid "download failure"
 msgstr "下载失败"
 
-#: src/utilities.cpp:726
+#: src/utilities.cpp:768
 msgid "using local installation package"
 msgstr "使用本地安装包"
 
-#: src/utilities.cpp:740
+#: src/utilities.cpp:782
 msgid "install update"
 msgstr "安装更新"
 
-#: src/utilities.cpp:760
+#: src/utilities.cpp:803
 msgid "install faliure"
 msgstr "安装失败"
 
-#: src/utilities.cpp:768
+#: src/utilities.cpp:812
 msgid "install success"
 msgstr "安装成功"
 
