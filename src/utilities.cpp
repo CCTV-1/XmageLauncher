@@ -3,8 +3,6 @@
 #include <cstring>
 
 #include <functional>
-#include <filesystem>
-#include <fstream>
 #include <memory>
 #include <set>
 #include <thread>
@@ -377,7 +375,7 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
         }
         if ( do_return )
         {
-            //stop update,update faliure.
+            //stop update,update failure.
             return false;
         }
 
@@ -445,7 +443,34 @@ static bool install_update_callback( Glib::ustring install_packge_name , Glib::u
         }
         std::shared_ptr<zip_file_t> file_ptr( zip_fopen_index( zip_ptr.get() , i , ZIP_FL_UNCHANGED ) , zip_fclose );
         zip_fread( file_ptr.get() , data_buff.get() , file_stat.size );
-        auto target_path = Gio::File::create_for_path( install_dir_path + "/" + file_stat.name );
+
+        Glib::ustring unzip_path( file_stat.name );
+        auto target_path = Gio::File::create_for_path( install_dir_path + "/" + unzip_path );
+        if ( unzip_path[unzip_path.size()-1] == '/' )
+        {
+            //avoid file_set_contents() write root/dir/ to root/dir
+            //if write to root/dir,block write root/dir/file exception handler mkdir(root/dir/) failure.
+            Gio::FileType type = target_path->query_file_type();
+            if ( type == Gio::FileType::FILE_TYPE_NOT_KNOWN )
+            {
+                target_path->make_directory_with_parents();
+            }
+            //if exists root/dir remove it.
+            else if ( type != Gio::FileType::FILE_TYPE_DIRECTORY )
+            {
+                target_path->remove();
+                target_path->make_directory_with_parents();
+            }
+
+            //update progress
+            {
+                std::lock_guard<std::mutex> lock( progress->work->update_mutex );
+                progress->work->prog_now = i + 1;
+            }
+            progress->caller->update_notify();
+            continue;
+        }
+
         try
         {
             Glib::file_set_contents( target_path->get_path() , data_buff.get() , file_stat.size );
@@ -453,29 +478,37 @@ static bool install_update_callback( Glib::ustring install_packge_name , Glib::u
         catch ( const Glib::FileError& e )
         {
             auto code = e.code();
-            if (
-                code == Glib::FileError::Code::NO_SUCH_ENTITY ||
-                code == Glib::FileError::Code::ACCESS_DENIED
-            )
+            if ( code == Glib::FileError::Code::ACCESS_DENIED )
+            {
+                if ( target_path->query_file_type() != Gio::FileType::FILE_TYPE_DIRECTORY )
+                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "access file:'%s failure',Glib::FileError code:%d" , target_path->get_path().c_str() , code );
+            }
+            else if ( code == Glib::FileError::Code::NO_SUCH_ENTITY )
             {
                 auto parent_dir = target_path->get_parent();
-                //zip_get_num_entries -> count root/dir/ file_set_contents write to root/dir,block makedir
+
+                //zip_get_num_entries ->exists 
                 Gio::FileType type = parent_dir->query_file_type();
                 if ( type == Gio::FileType::FILE_TYPE_NOT_KNOWN )
                 {
                     parent_dir->make_directory_with_parents();
                 }
-                else if ( type != Gio::FileType::FILE_TYPE_DIRECTORY )
+
+                try
                 {
-                    parent_dir->remove();
-                    parent_dir->make_directory_with_parents();
+                    Glib::file_set_contents( target_path->get_path() , data_buff.get() , file_stat.size );
+                }
+                catch ( const Glib::FileError& e )
+                {
+                    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "retry unzip file:'%s' failure,Glib::FileError code:%d" , target_path->get_path().c_str() , code );
                 }
             }
             else
             {
-                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "unzip file:'%s',Glib::FileError code:%d" , target_path->get_path().c_str() , code );
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "unzip file:'%s failure',Glib::FileError code:%d" , target_path->get_path().c_str() , code );
             }
         }
+
         {
             std::lock_guard<std::mutex> lock( progress->work->update_mutex );
             progress->work->prog_now = i + 1;
@@ -666,7 +699,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
     {
         //get update information failure
         g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , e.what() );
-        //don't need stop request,check update faliure,to return end update.
+        //don't need stop request,check update failure,to return end update.
         return ;
     }
 
@@ -775,7 +808,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
     {
         {
             std::lock_guard<std::mutex> lock( this->update_mutex );
-            this->prog_info = _( "install faliure" );
+            this->prog_info = _( "install failure" );
         }
         return ;
     }
