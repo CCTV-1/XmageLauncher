@@ -58,7 +58,7 @@ std::shared_future<xmage_desc_t> get_last_version( XmageType type );
 
 std::shared_future<bool> download_update( xmage_desc_t desc , progress_t * download_now = nullptr );
 
-std::shared_future<bool> install_update( Glib::ustring client_zip_name , Glib::ustring unzip_path , progress_t * progress ) noexcept( false );
+std::shared_future<bool> install_update( Glib::ustring install_packge_name , Glib::ustring install_dir_path , progress_t * progress );
 
 Glib::ustring get_installation_package_name( xmage_desc_t desc );
 
