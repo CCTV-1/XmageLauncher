@@ -12,12 +12,6 @@ ifeq ($(OS),Msys)
 	FLAGS += -mwindows
 endif
 
-ifeq ($(CC),g++)
-	FLAGS+=-lstdc++fs
-else
-	FLAGS+=-c++fs
-endif
-
 ifndef DEBUG
 	FLAGS+=-O3 
 endif

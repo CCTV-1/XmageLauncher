@@ -404,23 +404,25 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
     return true;
 }
 
-static bool install_update_callback( Glib::ustring client_zip_name , Glib::ustring unzip_path , progress_t * progress ) noexcept( false )
+static bool install_update_callback( Glib::ustring install_packge_name , Glib::ustring install_dir_path , progress_t * progress ) noexcept( false )
 {
     if ( progress == nullptr || progress->caller == nullptr || progress->work == nullptr )
     {
         return false;
     }
 
-    std::filesystem::path client_zip( client_zip_name.raw() );
-    std::filesystem::path unzip_dir( unzip_path.raw() );
-    if ( std::filesystem::exists( client_zip ) == false )
+    auto install_packge = Gio::File::create_for_path( install_packge_name );
+    auto install_dir = Gio::File::create_for_path( install_dir_path );
+    if ( install_packge->query_exists() == false )
     {
         return false;
     }
+    if ( install_dir->query_exists() == false )
+    {
+        install_dir->make_directory_with_parents();
+    }
 
-    if ( std::filesystem::exists( unzip_dir ) == false )
-        std::filesystem::create_directories( unzip_dir );
-    std::shared_ptr<zip_t> zip_ptr( zip_open( client_zip_name.c_str() , ZIP_RDONLY , nullptr ) , zip_close );
+    std::shared_ptr<zip_t> zip_ptr( zip_open( install_packge_name.c_str() , ZIP_RDONLY , nullptr ) , zip_close );
     zip_int64_t file_number = zip_get_num_entries( zip_ptr.get() , ZIP_FL_UNCHANGED );
     {
         std::lock_guard<std::mutex> lock( progress->work->update_mutex );
@@ -443,11 +445,10 @@ static bool install_update_callback( Glib::ustring client_zip_name , Glib::ustri
         }
         std::shared_ptr<zip_file_t> file_ptr( zip_fopen_index( zip_ptr.get() , i , ZIP_FL_UNCHANGED ) , zip_fclose );
         zip_fread( file_ptr.get() , data_buff.get() , file_stat.size );
-        std::filesystem::path target_path;
+        auto target_path = Gio::File::create_for_path( install_dir_path + "/" + file_stat.name );
         try
         {
-            target_path = std::filesystem::path( unzip_path.raw() + std::string( "/" ) + file_stat.name );
-            Glib::file_set_contents( target_path.string() , data_buff.get() , file_stat.size );
+            Glib::file_set_contents( target_path->get_path() , data_buff.get() , file_stat.size );
         }
         catch ( const Glib::FileError& e )
         {
@@ -457,18 +458,23 @@ static bool install_update_callback( Glib::ustring client_zip_name , Glib::ustri
                 code == Glib::FileError::Code::ACCESS_DENIED
             )
             {
-                std::filesystem::path parent_dir = target_path.parent_path();
-                std::filesystem::create_directories( parent_dir );
+                auto parent_dir = target_path->get_parent();
+                //zip_get_num_entries -> count root/dir/ file_set_contents write to root/dir,block makedir
+                Gio::FileType type = parent_dir->query_file_type();
+                if ( type == Gio::FileType::FILE_TYPE_NOT_KNOWN )
+                {
+                    parent_dir->make_directory_with_parents();
+                }
+                else if ( type != Gio::FileType::FILE_TYPE_DIRECTORY )
+                {
+                    parent_dir->remove();
+                    parent_dir->make_directory_with_parents();
+                }
             }
             else
             {
-                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "unzip file:'%s',Glib::FileError code:%d" , target_path.string().c_str() , code );
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "unzip file:'%s',Glib::FileError code:%d" , target_path->get_path().c_str() , code );
             }
-        }
-        //file name encoding not supported
-        catch ( const std::exception& e )
-        {
-            g_log( __func__ , G_LOG_LEVEL_MESSAGE , "file name:'%s/%s' encoding not supported" , unzip_path.c_str() , file_stat.name );
         }
         {
             std::lock_guard<std::mutex> lock( progress->work->update_mutex );
@@ -476,32 +482,6 @@ static bool install_update_callback( Glib::ustring client_zip_name , Glib::ustri
         }
         progress->caller->update_notify();
     }
-
-    //do not make assumptions about the user file tree,so change to config return root/xmage/mage-client(Beta) root/mage-client(Release)
-    //try
-    //{
-    //    std::filesystem::path install_root( unzip_path.raw() );
-
-    //    //remove old install
-    //    if ( std::filesystem::exists( install_root/"mage-client" ) )
-    //        std::filesystem::remove_all( install_root/"mage-client" );
-    //    if ( std::filesystem::exists( install_root/"mage-server" ) )
-    //        std::filesystem::remove_all( install_root/"mage-server" );
-
-    //    if ( std::filesystem::is_directory( install_root/"xmage" ) )
-    //    {
-    //        std::filesystem::rename( install_root/"xmage/mage-client" , install_root/"mage-client" );
-    //        std::filesystem::rename( install_root/"xmage/mage-server" , install_root/"mage-server" );
-    //        //when user set root to /home/user/,before exitst /home/user/xmage/image or other resources
-    //        if ( std::filesystem::is_empty( install_root/"xmage" ) )
-    //            std::filesystem::remove_all( install_root/"xmage" );
-    //    }
-    //}
-    //catch ( const std::exception& e )
-    //{
-    //    g_log( __func__ , G_LOG_LEVEL_MESSAGE , "except message:'%s',install root path:'%s'." , e.what() , unzip_path.c_str() );
-    //    return false;
-    //}
 
     return true;
 }
@@ -576,9 +556,9 @@ Glib::ustring get_download_temp_name( xmage_desc_t client_desc )
     return client_desc.version_name + ".dl";
 }
 
-std::shared_future<bool> install_update( Glib::ustring client_zip_name , Glib::ustring unzip_path , progress_t * progress ) noexcept( false )
+std::shared_future<bool> install_update( Glib::ustring install_packge_name , Glib::ustring install_dir_path , progress_t * progress )
 {
-    std::packaged_task<bool()> task( std::bind( install_update_callback , client_zip_name , unzip_path , progress ) );
+    std::packaged_task<bool()> task( std::bind( install_update_callback , install_packge_name , install_dir_path , progress ) );
     std::shared_future<bool> unzip_future = task.get_future();
     std::thread( std::move(task) ).detach();
 
@@ -716,7 +696,8 @@ void UpdateWork::do_update( XmageLauncher * caller )
 
     std::shared_future<bool> download_future;
     //if exists
-    if ( std::filesystem::is_regular_file( get_installation_package_name( update_desc ).raw() ) == false )
+    auto install_package = Gio::File::create_for_path( get_installation_package_name( update_desc ) );
+    if ( install_package->query_exists() == false )
     {
         download_future = download_update( update_desc , &progress );
         {
@@ -746,7 +727,8 @@ void UpdateWork::do_update( XmageLauncher * caller )
                 this->prog_info = _( "download success,install..." );
             }
             caller->update_notify();
-            std::filesystem::rename( get_download_temp_name( update_desc ).raw() , get_installation_package_name( update_desc ).raw() );
+            auto download_temp_file = Gio::File::create_for_path( get_download_temp_name( update_desc ) );
+            download_temp_file->move( install_package );
         }
         else
         {
@@ -812,8 +794,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
     {
         config.set_beta_version( update_desc.version_name );
     }
-    std::filesystem::remove( get_installation_package_name( update_desc ).raw() );
-
+    install_package->remove();
 }
 
 void UpdateWork::stop_update( void )
