@@ -61,6 +61,7 @@
         "winnt.h": "c",
         "bit": "cpp",
         "map": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "filesystem": "cpp"
     }
 }
