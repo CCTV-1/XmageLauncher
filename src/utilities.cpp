@@ -332,12 +332,12 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
         return false;
     }
 
-    long default_timeout = 60*60L;
+    //long default_timeout = 60*60L;
     char error_buff[CURL_ERROR_SIZE];
 
     common_curl_opt_set( curl_handle );
     curl_easy_setopt( curl_handle.get() , CURLOPT_URL , client_desc.download_url.c_str() );
-    curl_easy_setopt( curl_handle.get() , CURLOPT_TIMEOUT , default_timeout );
+    //curl_easy_setopt( curl_handle.get() , CURLOPT_TIMEOUT , default_timeout );
     curl_easy_setopt( curl_handle.get() , CURLOPT_NOPROGRESS , 0L );
     curl_easy_setopt( curl_handle.get() , CURLOPT_XFERINFOFUNCTION , download_description_callback );
     curl_easy_setopt( curl_handle.get() , CURLOPT_XFERINFODATA , download_desc );
@@ -359,14 +359,28 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
         }
     );
 
+    //curl_multi_timeout( curlmulti_handle.get() , &default_timeout );
+
     int running_handles;
     int repeats = 0;
-    curl_multi_perform( curlmulti_handle.get() , &running_handles );
+    CURLMcode status_code = curl_multi_perform( curlmulti_handle.get() , &running_handles );
+    if ( ( status_code != CURLM_OK ) && ( status_code != CURLM_CALL_MULTI_PERFORM ) )
+    {
+        g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error type:\'%s\',error message:\'%s\'" , 
+                client_desc.download_url.c_str() , curl_multi_strerror( status_code ) , error_buff );
+        return false;
+    }
     
     while( running_handles )
     {
         int numfds;
-        CURLMcode status_code = curl_multi_wait( curlmulti_handle.get() , nullptr , 0 , 100 , &numfds );
+        status_code = curl_multi_wait( curlmulti_handle.get() , nullptr , 0 , 100 , &numfds );
+        if ( status_code != CURLM_OK )
+        {
+            g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error type:\'%s\',error message:\'%s\'" , 
+                    client_desc.download_url.c_str() , curl_multi_strerror( status_code ) , error_buff );
+            return false;
+        }
 
         bool do_return;
         {
@@ -376,13 +390,6 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
         if ( do_return )
         {
             //stop update,update failure.
-            return false;
-        }
-
-        if ( status_code != CURLM_OK )
-        {
-            g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error type:\'%s\',error message:\'%s\'" , 
-                    client_desc.download_url.c_str() , curl_multi_strerror( status_code ) , error_buff );
             return false;
         }
 
@@ -396,8 +403,30 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
             repeats = 0;
         }
 
-        curl_multi_perform( curlmulti_handle.get() , &running_handles );
+        status_code = curl_multi_perform( curlmulti_handle.get() , &running_handles );
+        if ( ( status_code != CURLM_OK ) && ( status_code != CURLM_CALL_MULTI_PERFORM ) )
+        {
+            g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error type:\'%s\',error message:\'%s\'" , 
+                    client_desc.download_url.c_str() , curl_multi_strerror( status_code ) , error_buff );
+            return false;
+        }
     }
+
+    CURLMsg * message = nullptr;
+    do
+    {
+        int msgs_queue = 0;
+        message = curl_multi_info_read( curlmulti_handle.get() , &msgs_queue );
+        if ( ( message != nullptr ) && ( message->msg == CURLMSG_DONE ) )
+        {
+            if ( message->data.result != CURLE_OK )
+            {
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error content:\'%s\'" , 
+                client_desc.download_url.c_str() , curl_easy_strerror( message->data.result ) );
+                return false;
+            }
+        }
+    }while( message != nullptr );
 
     return true;
 }
@@ -664,7 +693,6 @@ void UpdateWork::do_update( XmageLauncher * caller )
         {
             {
                 std::lock_guard<std::mutex> lock( this->update_mutex );
-                this->prog_total = 0;
                 this->updating = false;
             }
             caller->update_notify();
@@ -700,6 +728,10 @@ void UpdateWork::do_update( XmageLauncher * caller )
         //get update information failure
         g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , e.what() );
         //don't need stop request,check update failure,to return end update.
+        {
+            std::lock_guard<std::mutex> lock( this->update_mutex );
+            this->prog_info = _( "check update failure" );
+        }
         return ;
     }
 
@@ -757,7 +789,9 @@ void UpdateWork::do_update( XmageLauncher * caller )
         {
             {
                 std::lock_guard<std::mutex> lock( this->update_mutex );
-                this->prog_info = _( "download success,install..." );
+                this->prog_now = 0;
+                this->prog_total = 0;
+                this->prog_info = _( "download success" );
             }
             caller->update_notify();
             auto download_temp_file = Gio::File::create_for_path( get_download_temp_name( update_desc ) );
@@ -767,6 +801,8 @@ void UpdateWork::do_update( XmageLauncher * caller )
         {
             {
                 std::lock_guard<std::mutex> lock( this->update_mutex );
+                this->prog_now = 0;
+                this->prog_total = 0;
                 this->prog_info = _( "download failure" );
             }
             return ;
@@ -808,6 +844,8 @@ void UpdateWork::do_update( XmageLauncher * caller )
     {
         {
             std::lock_guard<std::mutex> lock( this->update_mutex );
+            this->prog_now = 0;
+            this->prog_total = 0;
             this->prog_info = _( "install failure" );
         }
         return ;
@@ -815,6 +853,8 @@ void UpdateWork::do_update( XmageLauncher * caller )
 
     {
         std::lock_guard<std::mutex> lock( this->update_mutex );
+        this->prog_now = 0;
+        this->prog_total = 0;
         this->prog_info = _( "install success" );
     }
     caller->update_notify();
