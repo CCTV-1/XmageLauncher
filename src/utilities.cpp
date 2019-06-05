@@ -332,12 +332,10 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
         return false;
     }
 
-    //long default_timeout = 60*60L;
     char error_buff[CURL_ERROR_SIZE];
 
     common_curl_opt_set( curl_handle );
     curl_easy_setopt( curl_handle.get() , CURLOPT_URL , client_desc.download_url.c_str() );
-    //curl_easy_setopt( curl_handle.get() , CURLOPT_TIMEOUT , default_timeout );
     curl_easy_setopt( curl_handle.get() , CURLOPT_NOPROGRESS , 0L );
     curl_easy_setopt( curl_handle.get() , CURLOPT_XFERINFOFUNCTION , download_description_callback );
     curl_easy_setopt( curl_handle.get() , CURLOPT_XFERINFODATA , download_desc );
@@ -358,8 +356,6 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
             curl_multi_cleanup( handle );
         }
     );
-
-    //curl_multi_timeout( curlmulti_handle.get() , &default_timeout );
 
     int running_handles;
     int repeats = 0;
@@ -395,8 +391,15 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
 
         if ( numfds == 0 )
         {
-            if ( repeats++ > 0 )
-                std::this_thread::sleep_for( std::chrono::microseconds( 100 ) );
+            repeats++;
+            if ( repeats > 1 )
+                g_usleep( 100 );
+            //todo:add setting to launcher
+            if ( repeats > 5*600 ) //600*100ms = 1min
+            {
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "too long time not receiving data,disconnect,download failure." );
+                return false;
+            }
         }
         else
         {
@@ -421,8 +424,8 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
         {
             if ( message->data.result != CURLE_OK )
             {
-                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error content:\'%s\'" , 
-                client_desc.download_url.c_str() , curl_easy_strerror( message->data.result ) );
+                g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error content:\'%s\',error code:\'%d\'" , 
+                client_desc.download_url.c_str() , curl_easy_strerror( message->data.result ) , message->data.result );
                 return false;
             }
         }
