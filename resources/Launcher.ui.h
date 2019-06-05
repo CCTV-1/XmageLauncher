@@ -4,6 +4,7 @@ char *s = N_("Setting");
 char *s = N_("proxy type");
 char *s = N_("proxy host");
 char *s = N_("proxy port");
+char *s = N_("reset launcher config");
 char *s = N_("UpdateSetting");
 char *s = N_("XmageLauncher");
 char *s = N_("AdvancedSetting");
