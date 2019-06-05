@@ -10,6 +10,7 @@ typedef class LauncherConfig
 {
 public:
     static LauncherConfig& get_config( void );
+    void reset_config( void );
 
     ~LauncherConfig();
     LauncherConfig( const LauncherConfig& ) = delete;

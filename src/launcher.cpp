@@ -117,6 +117,49 @@ private:
     Glib::RefPtr<Pango::Layout> layout;
 };
 
+static void fill_setting_value( Glib::RefPtr<Gtk::Builder>& builder , config_t& config )
+{
+    Gtk::ComboBox * proxy_type;
+    builder->get_widget( "ProxyType" , proxy_type );
+    if ( config.get_using_proxy() )
+    {
+        proxy_type->set_active_id( config.get_proxy_scheme() );
+    }
+    else
+    {
+        proxy_type->set_active_id( "None" );
+    }
+
+    Gtk::Entry * proxy_host;
+    builder->get_widget( "ProxyHost" , proxy_host );
+    proxy_host->set_text( config.get_proxy_host() );
+
+    Gtk::SpinButton * proxy_port;
+    builder->get_widget( "ProxyPort" , proxy_port );
+    proxy_port->set_value( config.get_proxy_port() );
+
+    Gtk::SpinButton * xms_opt;
+    builder->get_widget( "XmsOpt" , xms_opt );
+    xms_opt->set_value( config.get_jvm_xms() );
+
+    Gtk::SpinButton * xmx_opt;
+    builder->get_widget( "XmxOpt" , xmx_opt );
+    xmx_opt->set_value( config.get_jvm_xmx() );
+
+    Gtk::FileChooserButton * release_path;
+    builder->get_widget( "ReleaseMagePath" , release_path );
+    release_path->set_filename( config.get_release_path() );
+
+    Gtk::FileChooserButton * beta_path;
+    builder->get_widget( "BetaMagePath" , beta_path );
+    beta_path->set_filename( config.get_beta_path() );
+
+    Gtk::ComboBox * active_xmage;
+    builder->get_widget( "UpdateSource" , active_xmage );
+    Glib::ustring source_string = xmagetype_to_string( config.get_active_xmage() );
+    active_xmage->set_active_id( source_string );
+}
+
 XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::Builder>& builder ):
     Gtk::Window( cobject ),
     launcher_builder( builder ),
@@ -146,23 +189,34 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
         }
     );
 
-    //Setting menu dialog
+    //advanced setting dialog
     builder->get_widget( "SettingDialog" , this->setting_dialog );
     this->setting_dialog->add_button( _( "close menu" ) , 0 );
     this->setting_dialog->signal_response().connect( sigc::mem_fun( *this , &XmageLauncher::close_setting ) );
     Gtk::Button * setting_button;
     builder->get_widget( "SettingButton" , setting_button );
     setting_button->signal_clicked().connect( sigc::mem_fun( *this , &XmageLauncher::show_setting ) );
+    Gtk::Button * reset_button;
+    builder->get_widget( "ResetConfig" , reset_button );
+    reset_button->signal_clicked().connect(
+        [ this ]()
+        {
+            this->config.reset_config();
+            fill_setting_value( this->launcher_builder , this->config );
+        }
+    );
+
+    //main window setting
     Gtk::ComboBox * proxy_type;
     builder->get_widget( "ProxyType" , proxy_type );
-    if ( config.get_using_proxy() )
-    {
+    //if ( config.get_using_proxy() )
+    //{
         proxy_type->set_active_id( config.get_proxy_scheme() );
-    }
-    else
-    {
-        proxy_type->set_active_id( "None" );
-    }
+    //}
+    //else
+    //{
+    //    proxy_type->set_active_id( "None" );
+    //}
     proxy_type->signal_changed().connect(
         [ this , proxy_type ]()
         {
@@ -181,7 +235,7 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     );
     Gtk::Entry * proxy_host;
     builder->get_widget( "ProxyHost" , proxy_host );
-    proxy_host->set_text( config.get_proxy_host() );
+    //proxy_host->set_text( config.get_proxy_host() );
     proxy_host->signal_changed().connect(
         [ this , proxy_host ]()
         {
@@ -191,7 +245,7 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     );
     Gtk::SpinButton * proxy_port;
     builder->get_widget( "ProxyPort" , proxy_port );
-    proxy_port->set_value( config.get_proxy_port() );
+    //proxy_port->set_value( config.get_proxy_port() );
     proxy_port->signal_value_changed().connect(
         [ this , proxy_port ]()
         {
@@ -201,7 +255,7 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     );
     Gtk::SpinButton * xms_opt;
     builder->get_widget( "XmsOpt" , xms_opt );
-    xms_opt->set_value( config.get_jvm_xms() );
+    //xms_opt->set_value( config.get_jvm_xms() );
     xms_opt->signal_value_changed().connect(
         [ this , xms_opt ]()
         {
@@ -211,7 +265,7 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     );
     Gtk::SpinButton * xmx_opt;
     builder->get_widget( "XmxOpt" , xmx_opt );
-    xmx_opt->set_value( this->config.get_jvm_xmx() );
+    //xmx_opt->set_value( config.get_jvm_xmx() );
     xmx_opt->signal_value_changed().connect(
         [ this , xmx_opt ]()
         {
@@ -221,7 +275,7 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     );
     Gtk::FileChooserButton * release_path;
     builder->get_widget( "ReleaseMagePath" , release_path );
-    release_path->set_filename( config.get_release_path() );
+    //release_path->set_filename( config.get_release_path() );
     release_path->signal_selection_changed().connect(
         [ this , release_path ]()
         {
@@ -231,7 +285,7 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     );
     Gtk::FileChooserButton * beta_path;
     builder->get_widget( "BetaMagePath" , beta_path );
-    beta_path->set_filename( this->config.get_beta_path() );
+    //beta_path->set_filename( config.get_beta_path() );
     beta_path->signal_selection_changed().connect(
         [ this , beta_path ]()
         {
@@ -241,8 +295,8 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     );
     Gtk::ComboBox * active_xmage;
     builder->get_widget( "UpdateSource" , active_xmage );
-    Glib::ustring source_string = xmagetype_to_string( this->config.get_active_xmage() );
-    active_xmage->set_active_id( source_string );
+    //Glib::ustring source_string = xmagetype_to_string( config.get_active_xmage() );
+    //active_xmage->set_active_id( source_string );
     active_xmage->signal_changed().connect(
         [ this , active_xmage ]()
         {

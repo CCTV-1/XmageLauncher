@@ -356,3 +356,8 @@ LauncherConfig& LauncherConfig::get_config( void )
     static LauncherConfig config;
     return config;
 }
+
+void LauncherConfig::reset_config( void )
+{
+    this->config_file = Glib::KeyFile();
+}
