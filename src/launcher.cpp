@@ -167,6 +167,7 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     update_process(),
     update_dispatcher()
 {
+    fill_setting_value( this->launcher_builder , this->config );
     if ( this->config.get_using_proxy() )
     {
         set_proxy( config.get_proxy_scheme() , config.get_proxy_host() , config.get_proxy_port() );
