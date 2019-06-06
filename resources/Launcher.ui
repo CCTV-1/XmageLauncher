@@ -372,6 +372,7 @@
                   <object class="GtkListBox">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="selection_mode">none</property>
                     <child>
                       <object class="GtkListBoxRow">
                         <property name="width_request">100</property>
@@ -498,6 +499,7 @@
                   <object class="GtkListBox">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="selection_mode">none</property>
                     <child>
                       <object class="GtkListBoxRow">
                         <property name="width_request">100</property>
