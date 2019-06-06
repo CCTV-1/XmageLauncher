@@ -16,8 +16,9 @@
 //proxy_port=1080
 //jvm_xms=256
 //jvm_xmx=1024
-//#0 -> XmageType::Beta 1->XmageType::Release
 //active_xmage=1
+
+//active_xmage 0 -> XmageType::Beta     1->XmageType::Release
 constexpr const char * CONFIG_FILE_NAME = "config.conf";
 
 LauncherConfig::LauncherConfig()
@@ -27,14 +28,14 @@ LauncherConfig::LauncherConfig()
     {
         this->config_file.load_from_file( CONFIG_FILE_NAME , Glib::KeyFileFlags::KEY_FILE_KEEP_COMMENTS | Glib::KeyFileFlags::KEY_FILE_KEEP_TRANSLATIONS );
     }
-    //access file error or file parse error getter function set config to default value,constructor only output log.
+    //access file error or file parse error,getter function set config to default value,constructor only output log.
     catch( const Glib::FileError& e )
     {
         g_log( __func__ , G_LOG_LEVEL_MESSAGE , "load config file faliure,exception type:Glib::FileError,code:%d" , e.code() );
     }
     catch( const Glib::KeyFileError& e )
     {
-        g_log( __func__ , G_LOG_LEVEL_MESSAGE , "load config file faliure,exception type:Glib::FileError code:%d" , e.code() );
+        g_log( __func__ , G_LOG_LEVEL_MESSAGE , "load config file faliure,exception type:Glib::KeyFileError code:%d" , e.code() );
     }
 }
 
