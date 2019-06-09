@@ -7,7 +7,7 @@
 //version=1.4.35.dev_2019-04-28_20-43
 //installed_path=BetaXmage
 //[Release]
-//version=xmage_1.4.35V2
+//version=1.4.35V2
 //installed_path=ReleaseXmage
 //[Setting]
 //using_proxy=false
@@ -78,7 +78,7 @@ Glib::ustring LauncherConfig::get_release_version()
 {
     if ( !this->config_file.has_group( "Release" ) || !this->config_file.has_key( "Release" , "version" ) )
     {
-        this->config_file.set_string( "Release" , "version" , "xmage_1.4.35V2" );
+        this->config_file.set_string( "Release" , "version" , "1.4.35V2" );
     }
     return this->config_file.get_string( "Release" , "version" );
 }
