@@ -195,10 +195,16 @@ static xmage_desc_t get_last_release_version( void ) noexcept( false )
     }
     Glib::ustring zip_name( json_string_value( version_name ) );
     Glib::ustring version = zip_name;
-    if ( Glib::str_has_suffix( zip_name , ".zip" ) )
+    
+    if ( Glib::str_has_prefix( version , "xmage_" ) )
+    {
+        //"xmage_" exists NUL sizeof 6
+        version = version.substr( sizeof( "xmage_" ) - 1 , version.size() );
+    }
+    if ( Glib::str_has_suffix( version , ".zip" ) )
     {
         //".zip" exists NUL sizeof 5
-        version = zip_name.substr( 0 , zip_name.size() - sizeof( ".zip" ) + 1 );
+        version = version.substr( 0 , version.size() - ( sizeof( ".zip" ) - 1 ) );
     }
 
     return { version , json_string_value( download_url ) };
