@@ -179,19 +179,14 @@ Glib::ustring LauncherConfig::get_release_server()
 }
 Glib::ustring LauncherConfig::get_release_mage_version( void )
 {
-    //xmage_1.4.35V1 to 1.4.35
+    //1.4.35V1 to 1.4.35
     Glib::ustring mage_version;
     Glib::ustring release_version = this->get_release_version();
 
-    for (
-        std::uint32_t i = sizeof( "xmage_" )/sizeof( char ) - 1;
-        release_version[i] != 'V' && i <= release_version.size();
-        i++
-    )
-    {
-        mage_version += release_version[i];
-    }
-    return mage_version;
+    std::size_t index = release_version.find_first_of( "V" , 0 );
+
+    //if Glib::ustring::nops return "1.4.35V1"
+    return release_version.substr( 0 , index );
 }
 Glib::ustring LauncherConfig::get_beta_mage_version( void )
 {
@@ -199,17 +194,10 @@ Glib::ustring LauncherConfig::get_beta_mage_version( void )
     Glib::ustring mage_version;
     Glib::ustring beta_version = this->get_beta_version();
 
-    std::uint32_t dot_num = 0;
-    for ( std::uint32_t i = 0 ; dot_num <= 2 && i <= beta_version.size() ; i++ )
-    {
-        if ( beta_version[i] == '.' )
-            dot_num++;
-        mage_version += beta_version[i];
-    }
-    //1.4.35.
-    mage_version = mage_version.substr( 0 , mage_version.size() - 1 );
-    //1.4.35
-    return mage_version;
+    std::size_t index = beta_version.find_first_of( ".dev" , 0 );
+
+    //if Glib::ustring::nops return "1.4.35.dev_2019-04-28_20-43"
+    return beta_version.substr( 0 , index );
 }
 Glib::ustring LauncherConfig::get_active_xmage_version( void )
 {
