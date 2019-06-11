@@ -49,5 +49,4 @@ po/XmageLauncher.pot: resources/Launcher.ui.h src/launcher.cpp src/utilities.cpp
 resources/Launcher.ui.h: resources/Launcher.ui
 	intltool-extract --type=gettext/glade resources/Launcher.ui
 clean:
-	-rm launcher src/launcher-resources.cpp utilities.o resources/Launcher.ui.h\
-	po/XmageLauncher.pot po/zh_CN.po po/en_US.po locale/zh_CN/LC_MESSAGES/XmageLauncher.mo locale/en_US/LC_MESSAGES/XmageLauncher.mo
+	-rm XmageLauncher launcher.o launcherconfig.o utilities.o
