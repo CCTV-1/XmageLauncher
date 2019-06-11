@@ -22,13 +22,12 @@ enum class XmageType:std::uint8_t
     Release
 };
 
-class XmageLauncher;
 struct UpdateWork
 {
     //struct default public
     UpdateWork();
     ~UpdateWork() = default;
-    void do_update( XmageLauncher * caller );
+    void do_update( Glib::Dispatcher& dispatcher );
     void stop_update( void );
     void get_data( bool& update_end , std::int64_t& now , std::int64_t& total , Glib::ustring& info );
     
@@ -41,7 +40,7 @@ struct UpdateWork
 
 typedef struct UpdateProgress
 {
-    XmageLauncher * caller;
+    Glib::Dispatcher& dispatcher;
     UpdateWork * work;
 }progress_t;
 

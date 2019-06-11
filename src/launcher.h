@@ -30,8 +30,6 @@ public:
     void close_setting( int );
     void do_update( void );
     void update_widgets( void );
-    void update_notify( void );
-    config_t& get_config( void );
 
 private:
     //keep ref to launcher deconstructor

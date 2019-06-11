@@ -401,7 +401,7 @@ void XmageLauncher::do_update( void )
     this->update_process = std::thread(
         [ this ]()
         {
-            this->update.do_update( this );
+            this->update.do_update( this->update_dispatcher );
         }
     );
 }
@@ -430,14 +430,4 @@ void XmageLauncher::update_widgets( void )
     update_progress_bar->set_progress_value( total ? now/static_cast<gdouble>( total ) : 0 );
 
     this->queue_draw();
-}
-
-void XmageLauncher::update_notify( void )
-{
-    this->update_dispatcher.emit();
-}
-
-config_t& XmageLauncher::get_config( void )
-{
-    return std::ref( this->config );
 }
