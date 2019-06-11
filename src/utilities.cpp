@@ -9,10 +9,11 @@
 
 #include <zip.h>
 #include <jansson.h>
+#include <giomm/file.h>
 #include <glibmm/i18n.h>
 
 #include "utilities.h"
-#include "launcher.h"
+#include "launcherconfig.h"
 
 typedef struct JsonBuff
 {
@@ -41,7 +42,7 @@ static int download_description_callback( void * client_ptr , curl_off_t dltotal
     if ( client_ptr == nullptr )
         return 0;
     progress_t * progress = static_cast<progress_t *>( client_ptr );
-    if ( progress == nullptr || progress->caller == nullptr || progress->work == nullptr )
+    if ( progress == nullptr || progress->work == nullptr )
     {
         return false;
     }
@@ -51,7 +52,7 @@ static int download_description_callback( void * client_ptr , curl_off_t dltotal
         progress->work->prog_now = dlnow;
         progress->work->prog_total = dltotal;
     }
-    progress->caller->update_notify();
+    progress->dispatcher.emit();
     return 0;
 }
 
@@ -467,7 +468,7 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
 
 static bool install_update_callback( Glib::ustring install_packge_name , Glib::ustring install_dir_path , progress_t * progress ) noexcept( false )
 {
-    if ( progress == nullptr || progress->caller == nullptr || progress->work == nullptr )
+    if ( progress == nullptr || progress->work == nullptr )
     {
         return false;
     }
@@ -489,7 +490,7 @@ static bool install_update_callback( Glib::ustring install_packge_name , Glib::u
         std::lock_guard<std::mutex> lock( progress->work->update_mutex );
         progress->work->prog_total = file_number;
     }
-    progress->caller->update_notify();
+    progress->dispatcher.emit();
 
     zip_uint64_t buff_size = 1024 * 8 * sizeof( char );
     std::shared_ptr<char> data_buff( static_cast<char *>( calloc( buff_size , sizeof( char ) ) ) , free );
@@ -530,7 +531,7 @@ static bool install_update_callback( Glib::ustring install_packge_name , Glib::u
                 std::lock_guard<std::mutex> lock( progress->work->update_mutex );
                 progress->work->prog_now = i + 1;
             }
-            progress->caller->update_notify();
+            progress->dispatcher.emit();
             continue;
         }
 
@@ -576,7 +577,7 @@ static bool install_update_callback( Glib::ustring install_packge_name , Glib::u
             std::lock_guard<std::mutex> lock( progress->work->update_mutex );
             progress->work->prog_now = i + 1;
         }
-        progress->caller->update_notify();
+        progress->dispatcher.emit();
     }
 
     return true;
@@ -709,7 +710,7 @@ UpdateWork::UpdateWork():
     ;
 }
 
-void UpdateWork::do_update( XmageLauncher * caller )
+void UpdateWork::do_update( Glib::Dispatcher& dispatcher )
 {
     //start update,disable launch button
     {
@@ -717,31 +718,31 @@ void UpdateWork::do_update( XmageLauncher * caller )
         this->prog_info = _( "check for updates" );
     }
 
-    //return ; call deconstruct,don't need call caller->update_notify();
+    //return ; call deconstruct,don't need call dispatcher.emit();
     std::shared_ptr<void> lock_launch(
-        [ this , caller ]()
+        [ this , &dispatcher ]()
         {
             {
                 std::lock_guard<std::mutex> lock( this->update_mutex );
                 this->updating = true;
             }
-            caller->update_notify();
+            dispatcher.emit();
             return nullptr;
         }(),
-        [ this , caller ]( void * )
+        [ this , &dispatcher ]( void * )
         {
             {
                 std::lock_guard<std::mutex> lock( this->update_mutex );
                 this->prog_total = 0;
                 this->updating = false;
             }
-            caller->update_notify();
+            dispatcher.emit();
         }
     );
 
     config_t& config = config_t::get_config();
     XmageType type = config.get_active_xmage();
-    progress_t progress = { caller , this };
+    progress_t progress = { dispatcher , this };
 
     auto update_future = get_last_version( type );
     xmage_desc_t update_desc;
@@ -786,7 +787,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
     }
 
     g_log( __func__ , G_LOG_LEVEL_MESSAGE , _( "last xmage version:'%s',download url:'%s'." ) , update_desc.version_name.c_str() , update_desc.download_url.c_str() );
-    if ( update_desc.version_name.compare( version ) < 0 )
+    if ( update_desc.version_name.compare( version ) > 0 )
     {
         g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , _( "exist new xmage,now download." ) );
     }
@@ -809,7 +810,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
             std::lock_guard<std::mutex> lock( this->update_mutex );
             this->prog_info = _( "download update" );
         }
-        caller->update_notify();
+        dispatcher.emit();
         while ( download_future.wait_for( std::chrono::microseconds( 200 ) ) != std::future_status::ready )
         {
             bool do_return = false;
@@ -833,7 +834,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
                 this->prog_total = 0;
                 this->prog_info = _( "download success" );
             }
-            caller->update_notify();
+            dispatcher.emit();
             auto download_temp_file = Gio::File::create_for_path( get_download_temp_name( update_desc ) );
             download_temp_file->move( install_package );
         }
@@ -867,7 +868,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
         this->prog_info = _( "install update" );
     }
     auto install_future = install_update( get_installation_package_name( update_desc ) ,  install_path , &progress );
-    caller->update_notify();
+    dispatcher.emit();
     while ( install_future.wait_for( std::chrono::microseconds( 200 ) ) != std::future_status::ready )
     {
         bool do_return = false;
@@ -897,7 +898,7 @@ void UpdateWork::do_update( XmageLauncher * caller )
         this->prog_total = 0;
         this->prog_info = _( "install success" );
     }
-    caller->update_notify();
+    dispatcher.emit();
 
     if ( type == XmageType::Release )
     {
