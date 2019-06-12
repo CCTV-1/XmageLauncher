@@ -39,8 +39,6 @@ static void common_curl_opt_set( std::shared_ptr<CURL> curl_handle )
 
 static int download_description_callback( void * client_ptr , curl_off_t dltotal , curl_off_t dlnow , curl_off_t , curl_off_t )
 {
-    if ( client_ptr == nullptr )
-        return 0;
     progress_t * progress = static_cast<progress_t *>( client_ptr );
     if ( progress == nullptr || progress->work == nullptr )
     {
@@ -211,7 +209,7 @@ static xmage_desc_t get_last_release_version( void ) noexcept( false )
     return { version , json_string_value( download_url ) };
 }
 
-static xmage_desc_t get_last_release_mirror_version( void ) noexcept( false )
+[[maybe_unused]] static xmage_desc_t get_last_release_mirror_version( void ) noexcept( false )
 {
     //{
     //"java" : {
@@ -351,12 +349,12 @@ static xmage_desc_t get_last_beta_version( void ) noexcept( false )
     return { json_string_value( version ) , json_string_value( download_url ) };
 }
 
-static bool download_update_callback( xmage_desc_t client_desc , progress_t * download_desc )
+static bool download_update_callback( xmage_desc_t version_desc , progress_t * download_desc )
 {
     std::shared_ptr<CURL> curl_handle( curl_easy_init() , curl_easy_cleanup );
 
     //output temp file,download success,rename to version.zip,to support check local zip continue download.
-    Glib::ustring temp_name = get_download_temp_name( client_desc );
+    Glib::ustring temp_name = get_download_temp_name( version_desc );
     std::shared_ptr<FILE> download_file( fopen( temp_name.c_str() , "wb+" ) , fclose );
     if ( download_file.get() == nullptr )
     {
@@ -367,7 +365,7 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
     char error_buff[CURL_ERROR_SIZE];
 
     common_curl_opt_set( curl_handle );
-    curl_easy_setopt( curl_handle.get() , CURLOPT_URL , client_desc.download_url.c_str() );
+    curl_easy_setopt( curl_handle.get() , CURLOPT_URL , version_desc.download_url.c_str() );
     curl_easy_setopt( curl_handle.get() , CURLOPT_NOPROGRESS , 0L );
     curl_easy_setopt( curl_handle.get() , CURLOPT_XFERINFOFUNCTION , download_description_callback );
     curl_easy_setopt( curl_handle.get() , CURLOPT_XFERINFODATA , download_desc );
@@ -395,7 +393,7 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
     if ( ( status_code != CURLM_OK ) && ( status_code != CURLM_CALL_MULTI_PERFORM ) )
     {
         g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error type:\'%s\',error message:\'%s\'" , 
-                client_desc.download_url.c_str() , curl_multi_strerror( status_code ) , error_buff );
+                version_desc.download_url.c_str() , curl_multi_strerror( status_code ) , error_buff );
         return false;
     }
     
@@ -406,7 +404,7 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
         if ( status_code != CURLM_OK )
         {
             g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error type:\'%s\',error message:\'%s\'" , 
-                    client_desc.download_url.c_str() , curl_multi_strerror( status_code ) , error_buff );
+                    version_desc.download_url.c_str() , curl_multi_strerror( status_code ) , error_buff );
             return false;
         }
 
@@ -442,7 +440,7 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
         if ( ( status_code != CURLM_OK ) && ( status_code != CURLM_CALL_MULTI_PERFORM ) )
         {
             g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error type:\'%s\',error message:\'%s\'" , 
-                    client_desc.download_url.c_str() , curl_multi_strerror( status_code ) , error_buff );
+                    version_desc.download_url.c_str() , curl_multi_strerror( status_code ) , error_buff );
             return false;
         }
     }
@@ -457,7 +455,7 @@ static bool download_update_callback( xmage_desc_t client_desc , progress_t * do
             if ( message->data.result != CURLE_OK )
             {
                 g_log( __func__ , G_LOG_LEVEL_MESSAGE , "download url:\'%s\',error content:\'%s\',error code:\'%d\'" , 
-                client_desc.download_url.c_str() , curl_easy_strerror( message->data.result ) , message->data.result );
+                version_desc.download_url.c_str() , curl_easy_strerror( message->data.result ) , message->data.result );
                 return false;
             }
         }
@@ -639,23 +637,23 @@ std::shared_future<xmage_desc_t> get_last_version( XmageType type )
     return version_future;
 }
 
-std::shared_future<bool> download_update( xmage_desc_t client_desc , progress_t * download_desc )
+std::shared_future<bool> download_update( xmage_desc_t version_desc , progress_t * download_desc )
 {
-    std::packaged_task<bool()> task( std::bind( download_update_callback , client_desc , download_desc ) );
+    std::packaged_task<bool()> task( std::bind( download_update_callback , version_desc , download_desc ) );
     std::shared_future<bool> download_future = task.get_future();
     std::thread( std::move(task) ).detach();
 
     return download_future;
 }
 
-Glib::ustring get_installation_package_name( xmage_desc_t client_desc )
+Glib::ustring get_installation_package_name( xmage_desc_t version_desc )
 {
-    return client_desc.version_name + ".zip";
+    return version_desc.version_name + ".zip";
 }
 
-Glib::ustring get_download_temp_name( xmage_desc_t client_desc )
+Glib::ustring get_download_temp_name( xmage_desc_t version_desc )
 {
-    return client_desc.version_name + ".dl";
+    return version_desc.version_name + ".dl";
 }
 
 std::shared_future<bool> install_update( Glib::ustring install_packge_name , Glib::ustring install_dir_path , progress_t * progress )
