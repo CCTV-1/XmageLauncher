@@ -260,7 +260,7 @@ Glib::ustring LauncherConfig::get_release_mage_version( void )
     Glib::ustring mage_version;
     Glib::ustring release_version = this->get_release_version();
 
-    std::size_t index = release_version.find_first_of( "V" , 0 );
+    std::size_t index = release_version.find( 'V' );
 
     //if Glib::ustring::nops return "1.4.35V1"
     return release_version.substr( 0 , index );
@@ -271,7 +271,7 @@ Glib::ustring LauncherConfig::get_beta_mage_version( void )
     Glib::ustring mage_version;
     Glib::ustring beta_version = this->get_beta_version();
 
-    std::size_t index = beta_version.find_first_of( ".dev" , 0 );
+    std::size_t index = beta_version.find( ".dev" );
 
     //if Glib::ustring::nops return "1.4.35.dev_2019-04-28_20-43"
     return beta_version.substr( 0 , index );
