@@ -24,6 +24,7 @@ public:
     Glib::ustring get_release_version( void );
     Glib::ustring get_release_path( void );
     bool          get_using_proxy( void );
+    bool          get_using_mirror( void );
     Glib::ustring get_proxy_scheme( void );
     Glib::ustring get_proxy_host( void );
     std::uint32_t get_proxy_port( void );
@@ -36,6 +37,7 @@ public:
     LauncherConfig& set_release_version( const Glib::ustring& );
     LauncherConfig& set_release_path( const Glib::ustring& );
     LauncherConfig& set_using_proxy( const bool& );
+    LauncherConfig& set_using_mirror( const bool& );
     LauncherConfig& set_proxy_scheme( const Glib::ustring& );
     LauncherConfig& set_proxy_host( const Glib::ustring& );
     LauncherConfig& set_proxy_port( const std::uint32_t& );

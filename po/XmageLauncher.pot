@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-06-05 23:03+0800\n"
+"POT-Creation-Date: 2019-09-25 20:28+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -46,106 +46,110 @@ msgid "reset launcher config"
 msgstr ""
 
 #: resources/Launcher.ui.h:8
-msgid "UpdateSetting"
+msgid "release source update using mirror "
 msgstr ""
 
 #: resources/Launcher.ui.h:9
-msgid "XmageLauncher"
+msgid "UpdateSetting"
 msgstr ""
 
 #: resources/Launcher.ui.h:10
-msgid "AdvancedSetting"
+msgid "XmageLauncher"
 msgstr ""
 
 #: resources/Launcher.ui.h:11
-msgid "jvm initial heap size"
+msgid "AdvancedSetting"
 msgstr ""
 
 #: resources/Launcher.ui.h:12
-msgid "jvm maximum heap size"
+msgid "jvm initial heap size"
 msgstr ""
 
 #: resources/Launcher.ui.h:13
-msgid "GameSetting"
+msgid "jvm maximum heap size"
 msgstr ""
 
 #: resources/Launcher.ui.h:14
-msgid "release xmage install path"
+msgid "GameSetting"
 msgstr ""
 
 #: resources/Launcher.ui.h:15
-msgid "beta xmage install path"
+msgid "release xmage install path"
 msgstr ""
 
 #: resources/Launcher.ui.h:16
-msgid "update source"
+msgid "beta xmage install path"
 msgstr ""
 
 #: resources/Launcher.ui.h:17
-msgid "LauncherSetting"
+msgid "update source"
 msgstr ""
 
 #: resources/Launcher.ui.h:18
-msgid "LauncherXmage"
+msgid "LauncherSetting"
 msgstr ""
 
 #: resources/Launcher.ui.h:19
-msgid "LauncherClient"
+msgid "LauncherXmage"
 msgstr ""
 
 #: resources/Launcher.ui.h:20
+msgid "LauncherClient"
+msgstr ""
+
+#: resources/Launcher.ui.h:21
 msgid "LauncherServer"
 msgstr ""
 
-#: src/launcher.cpp:194
+#: src/launcher.cpp:195
 msgid "close menu"
 msgstr ""
 
-#: src/utilities.cpp:681
+#: src/utilities.cpp:720
 msgid "check for updates"
 msgstr ""
 
-#: src/utilities.cpp:736
+#: src/utilities.cpp:776
 msgid "check update failure"
 msgstr ""
 
-#: src/utilities.cpp:751
+#: src/utilities.cpp:791
 #, c-format
 msgid "last xmage version:'%s',download url:'%s'."
 msgstr ""
 
-#: src/utilities.cpp:754
+#: src/utilities.cpp:794
 msgid "exist new xmage,now download."
 msgstr ""
 
-#: src/utilities.cpp:760
+#: src/utilities.cpp:800
 msgid "no need to update"
 msgstr ""
 
-#: src/utilities.cpp:773
+#: src/utilities.cpp:813
 msgid "download update"
 msgstr ""
 
-#: src/utilities.cpp:797
+#: src/utilities.cpp:837
 msgid "download success"
 msgstr ""
 
-#: src/utilities.cpp:809
+#: src/utilities.cpp:849
 msgid "download failure"
 msgstr ""
 
-#: src/utilities.cpp:816
+#: src/utilities.cpp:856
 msgid "using local installation package"
 msgstr ""
 
-#: src/utilities.cpp:830
+#: src/utilities.cpp:870
 msgid "install update"
 msgstr ""
 
-#: src/utilities.cpp:852
+#: src/utilities.cpp:892
 msgid "install failure"
 msgstr ""
 
-#: src/utilities.cpp:861
+#: src/utilities.cpp:901
 msgid "install success"
 msgstr ""

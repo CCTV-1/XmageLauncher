@@ -209,7 +209,7 @@ static xmage_desc_t get_last_release_version( void ) noexcept( false )
     return { version , json_string_value( download_url ) };
 }
 
-[[maybe_unused]] static xmage_desc_t get_last_release_mirror_version( void ) noexcept( false )
+static xmage_desc_t get_last_release_mirror_version( void ) noexcept( false )
 {
     //{
     //"java" : {
@@ -619,11 +619,15 @@ bool set_proxy( Glib::ustring scheme , Glib::ustring hostname , std::uint32_t po
 
 std::shared_future<xmage_desc_t> get_last_version( XmageType type )
 {
+    config_t& config = config_t::get_config();
+    bool using_mirror = config.get_using_mirror();
     std::function<xmage_desc_t()> get_version_func;
     if ( type == XmageType::Release )
     {
-        get_version_func = get_last_release_version;
-        //get_version_func = get_last_release_mirror_version;
+        if ( using_mirror )
+            get_version_func = get_last_release_version;
+        else
+            get_version_func = get_last_release_mirror_version;
     }
     else
     {

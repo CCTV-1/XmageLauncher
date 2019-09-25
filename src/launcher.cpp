@@ -197,6 +197,15 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     Gtk::Button * setting_button;
     builder->get_widget( "SettingButton" , setting_button );
     setting_button->signal_clicked().connect( sigc::mem_fun( *this , &XmageLauncher::show_setting ) );
+    Gtk::CheckButton * using_mirror_button;
+    builder->get_widget( "UsingMirror" , using_mirror_button );
+    using_mirror_button->set_active( this->config.get_using_mirror() );
+    using_mirror_button->signal_toggled().connect(
+        [ this , using_mirror_button ]()
+        {
+            this->config.set_using_mirror( using_mirror_button->get_active() );
+        }
+    );
     Gtk::Button * reset_button;
     builder->get_widget( "ResetConfig" , reset_button );
     reset_button->signal_clicked().connect(

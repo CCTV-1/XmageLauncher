@@ -10,6 +10,7 @@
 //version=1.4.35V2
 //installed_path=ReleaseXmage
 //[Setting]
+//using_mirror=false
 //using_proxy=false
 //proxy_scheme=http
 //proxy_host=localhost
@@ -44,12 +45,12 @@ LauncherConfig::~LauncherConfig()
     this->config_file.save_to_file( CONFIG_FILE_NAME );
 }
 
-Glib::ustring LauncherConfig::get_java_path()
+Glib::ustring LauncherConfig::get_java_path( void )
 {
     return Glib::find_program_in_path( "java" );
 }
 
-Glib::ustring LauncherConfig::get_javaw_path()
+Glib::ustring LauncherConfig::get_javaw_path( void )
 {
     #ifdef G_OS_WIN32
         return Glib::find_program_in_path( "javaw" );
@@ -58,7 +59,7 @@ Glib::ustring LauncherConfig::get_javaw_path()
     #endif
 }
 
-Glib::ustring LauncherConfig::get_beta_version()
+Glib::ustring LauncherConfig::get_beta_version( void )
 {
     Glib::ustring version;
     try
@@ -73,7 +74,7 @@ Glib::ustring LauncherConfig::get_beta_version()
 
     return version;
 }
-Glib::ustring LauncherConfig::get_beta_path()
+Glib::ustring LauncherConfig::get_beta_path( void )
 {
     Glib::ustring path;
     try
@@ -88,7 +89,7 @@ Glib::ustring LauncherConfig::get_beta_path()
 
     return path;
 }
-Glib::ustring LauncherConfig::get_release_version()
+Glib::ustring LauncherConfig::get_release_version( void )
 {
     Glib::ustring version;
     try
@@ -103,7 +104,7 @@ Glib::ustring LauncherConfig::get_release_version()
 
     return version;
 }
-Glib::ustring LauncherConfig::get_release_path()
+Glib::ustring LauncherConfig::get_release_path( void )
 {
     Glib::ustring path;
     try
@@ -118,7 +119,7 @@ Glib::ustring LauncherConfig::get_release_path()
 
     return path;
 }
-bool LauncherConfig::get_using_proxy()
+bool LauncherConfig::get_using_proxy( void )
 {
     bool is_enable;
     try
@@ -133,7 +134,22 @@ bool LauncherConfig::get_using_proxy()
 
     return is_enable;
 }
-Glib::ustring LauncherConfig::get_proxy_scheme()
+bool LauncherConfig::get_using_mirror( void )
+{
+    bool is_enable;
+    try
+    {
+        is_enable = this->config_file.get_boolean( "Setting" , "using_mirror" );
+    }
+    catch ( const Glib::KeyFileError& e )
+    {
+        is_enable = false;
+        this->config_file.set_boolean( "Setting" , "using_mirror" , is_enable );
+    }
+
+    return is_enable;
+}
+Glib::ustring LauncherConfig::get_proxy_scheme( void )
 {
     Glib::ustring scheme;
     try
@@ -148,7 +164,7 @@ Glib::ustring LauncherConfig::get_proxy_scheme()
 
     return scheme;
 }
-Glib::ustring LauncherConfig::get_proxy_host()
+Glib::ustring LauncherConfig::get_proxy_host( void )
 {
     Glib::ustring host;
     try
@@ -163,7 +179,7 @@ Glib::ustring LauncherConfig::get_proxy_host()
 
     return host;
 }
-std::uint32_t LauncherConfig::get_proxy_port()
+std::uint32_t LauncherConfig::get_proxy_port( void )
 {
     std::uint32_t port;
     try
@@ -178,7 +194,7 @@ std::uint32_t LauncherConfig::get_proxy_port()
 
     return port;
 }
-std::uint32_t LauncherConfig::get_jvm_xms()
+std::uint32_t LauncherConfig::get_jvm_xms( void )
 {
     std::uint32_t xms;
     try
@@ -193,7 +209,7 @@ std::uint32_t LauncherConfig::get_jvm_xms()
 
     return xms;
 }
-std::uint32_t LauncherConfig::get_jvm_xmx()
+std::uint32_t LauncherConfig::get_jvm_xmx( void )
 {
     std::uint32_t xmx;
     try
@@ -208,7 +224,7 @@ std::uint32_t LauncherConfig::get_jvm_xmx()
 
     return xmx;
 }
-XmageType LauncherConfig::get_active_xmage()
+XmageType LauncherConfig::get_active_xmage( void )
 {
     XmageType active_type;
     try
@@ -238,19 +254,19 @@ XmageType LauncherConfig::get_active_xmage()
 //  mage-server/
 //      ...
 //  ...
-Glib::ustring LauncherConfig::get_beta_client()
+Glib::ustring LauncherConfig::get_beta_client( void )
 {
     return this->get_beta_path() + "/xmage/mage-client/";
 }
-Glib::ustring LauncherConfig::get_beta_server()
+Glib::ustring LauncherConfig::get_beta_server( void )
 {
     return this->get_beta_path() + "/xmage/mage-server/";
 }
-Glib::ustring LauncherConfig::get_release_client()
+Glib::ustring LauncherConfig::get_release_client( void )
 {
     return this->get_release_path() + "/mage-client/";
 }
-Glib::ustring LauncherConfig::get_release_server()
+Glib::ustring LauncherConfig::get_release_server( void )
 {
     return this->get_release_path() + "/mage-server/";
 }
@@ -384,6 +400,11 @@ LauncherConfig& LauncherConfig::set_release_path( const Glib::ustring& release_p
 LauncherConfig& LauncherConfig::set_using_proxy( const bool& using_proxy )
 {
     this->config_file.set_boolean( "Setting" , "using_proxy" , using_proxy );
+    return *this;
+}
+LauncherConfig& LauncherConfig::set_using_mirror( const bool& using_mirror )
+{
+    this->config_file.set_boolean( "Setting" , "using_mirror" , using_mirror );
     return *this;
 }
 LauncherConfig& LauncherConfig::set_proxy_scheme( const Glib::ustring& proxy_scheme )
