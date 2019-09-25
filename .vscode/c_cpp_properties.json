@@ -5,8 +5,8 @@
             "intelliSenseMode": "gcc-x64",
             "includePath": [
                 "${workspaceRoot}",
-                "D:/MSYS2/mingw64/include/c++/9.1.0",
-                "D:/MSYS2/mingw64/include/c++/9.1.0/x86_64-w64-mingw32",
+                "D:/MSYS2/mingw64/include/c++/9.2.0",
+                "D:/MSYS2/mingw64/include/c++/9.2.0/x86_64-w64-mingw32",
                 "D:/MSYS2/mingw64/include/sigc++-2.0",
                 "D:/MSYS2/mingw64/include/giomm-2.4",
                 "D:/MSYS2/mingw64/include/glibmm-2.4",
@@ -58,13 +58,13 @@
                 "D:/MSYS2/usr/include/w32api",
                 "D:/MSYS2/usr/lib/glib-2.0/include",
                 "D:/MSYS2/usr/include/glib-2.0",
-                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/7.4.0/include",
-                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/7.4.0/include/c++",
-                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/7.4.0/include/c++/tr1",
-                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/7.4.0/include/c++/ext",
-                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/7.4.0/include/c++/experimental",
-                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/7.4.0/include/c++/x86_64-pc-msys",
-                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/7.4.0/include/c++/backward"
+                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/9.1.0/include",
+                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/9.1.0/include/c++",
+                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/9.1.0/include/c++/tr1",
+                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/9.1.0/include/c++/ext",
+                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/9.1.0/include/c++/experimental",
+                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/9.1.0/include/c++/x86_64-pc-msys",
+                "D:/MSYS2/usr/lib/gcc/x86_64-pc-msys/9.1.0/include/c++/backward"
             ],
             "defines": [
                 "_DEBUG",
