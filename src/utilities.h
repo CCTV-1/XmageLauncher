@@ -46,8 +46,6 @@ typedef struct UpdateProgress
 
 Glib::ustring xmagetype_to_string( const XmageType& type );
 
-XmageType string_to_xmagetype( const Glib::ustring& str );
-
 //non-thread safe,existing network thread not affected
 //argument hostname: host name or dotted numerical IP address. A numerical IPv6 address must be written within [brackets].
 //scheme type see enum curl_proxytype

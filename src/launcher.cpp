@@ -153,11 +153,6 @@ static void fill_setting_value( Glib::RefPtr<Gtk::Builder>& builder , config_t& 
     Gtk::FileChooserButton * beta_path;
     builder->get_widget( "BetaMagePath" , beta_path );
     beta_path->set_filename( config.get_beta_path() );
-
-    Gtk::ComboBox * active_xmage;
-    builder->get_widget( "UpdateSource" , active_xmage );
-    Glib::ustring source_string = xmagetype_to_string( config.get_active_xmage() );
-    active_xmage->set_active_id( source_string );
 }
 
 XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::Builder>& builder ):
@@ -211,6 +206,10 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     reset_button->signal_clicked().connect(
         [ this ]()
         {
+            Gtk::MessageDialog confirm( Glib::ustring(_( "do you want reset config?" )) , false , Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO );
+            confirm.set_position( Gtk::WindowPosition::WIN_POS_CENTER_ALWAYS );
+            if ( confirm.run() != Gtk::RESPONSE_YES )
+                return ;
             this->config.reset_config();
             fill_setting_value( this->launcher_builder , this->config );
         }
@@ -303,11 +302,26 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     );
     Gtk::ComboBox * active_xmage;
     builder->get_widget( "UpdateSource" , active_xmage );
+    Gtk::TreeModelColumnRecord type_colrec;
+    Gtk::TreeModelColumn<std::uint32_t> index_col;
+    Gtk::TreeModelColumn<Glib::ustring> type_col;
+    type_colrec.add( type_col );
+    type_colrec.add( index_col );
+    auto typemodel = Gtk::ListStore::create(type_colrec);
+    for ( std::uint8_t i = std::uint8_t(XmageType::Beta) ; i <= std::uint8_t(XmageType::Release) ; i++ )
+    {
+        Gtk::TreeModel::Row row = *(typemodel->append());
+        row[index_col] = i;
+        row[type_col] = xmagetype_to_string( static_cast<XmageType>(i) );
+    }
+    active_xmage->set_model(typemodel);
+    active_xmage->pack_start( type_col );
+    active_xmage->property_active().set_value( static_cast<int>(config.get_active_xmage()) );
     active_xmage->signal_changed().connect(
         [ this , active_xmage ]()
         {
-            Glib::ustring source = active_xmage->get_active_id();
-            this->config.set_active_xmage( string_to_xmagetype( source ) );
+            int source = active_xmage->property_active();
+            this->config.set_active_xmage( static_cast<XmageType>(source) );
             this->do_update();
         }
     );

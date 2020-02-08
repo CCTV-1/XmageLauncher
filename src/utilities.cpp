@@ -676,30 +676,14 @@ Glib::ustring xmagetype_to_string( const XmageType& type )
     {
         default:
         case XmageType::Release:
-            str = "Release";
+            str = _( "Release" );
             break;
         case XmageType::Beta:
-            str = "Beta";
+            str = _( "Beta" );
             break;
     }
 
     return str;
-}
-
-XmageType string_to_xmagetype( const Glib::ustring& str )
-{
-    XmageType type = XmageType::Release;
-    Glib::ustring diff_str = str.lowercase();
-    if ( diff_str == "release" )
-    {
-        type = XmageType::Release;
-    }
-    if ( diff_str == "beta" )
-    {
-        type = XmageType::Beta;
-    }
-
-    return type;
 }
 
 UpdateWork::UpdateWork():

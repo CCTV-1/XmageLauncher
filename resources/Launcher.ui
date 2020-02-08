@@ -277,20 +277,6 @@
       </object>
     </child>
   </object>
-  <object class="GtkListStore" id="XmageType">
-    <columns>
-      <!-- column-name gchararray1 -->
-      <column type="gchararray"/>
-    </columns>
-    <data>
-      <row>
-        <col id="0">Release</col>
-      </row>
-      <row>
-        <col id="0">Beta</col>
-      </row>
-    </data>
-  </object>
   <object class="GtkFrame">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -630,16 +616,6 @@
                               <object class="GtkComboBox" id="UpdateSource">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="model">XmageType</property>
-                                <property name="active">0</property>
-                                <property name="id_column">0</property>
-                                <property name="active_id">0</property>
-                                <child>
-                                  <object class="GtkCellRendererText"/>
-                                  <attributes>
-                                    <attribute name="text">0</attribute>
-                                  </attributes>
-                                </child>
                               </object>
                               <packing>
                                 <property name="left_attach">1</property>
