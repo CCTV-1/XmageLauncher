@@ -8,7 +8,7 @@
 #include <thread>
 
 #include <zip.h>
-#include <jansson.h>
+#include <json-glib/json-glib.h>
 #include <giomm/file.h>
 #include <glibmm/i18n.h>
 
@@ -74,7 +74,7 @@ static std::size_t get_json_callback( char * content , std::size_t size , std::s
     return realsize;
 }
 
-static std::shared_ptr<json_t> get_json( Glib::ustring url ) noexcept( false )
+static std::shared_ptr<JsonParser> get_json( Glib::ustring url ) noexcept( false )
 {
     std::string except_message( __func__ );
 
@@ -116,8 +116,8 @@ static std::shared_ptr<json_t> get_json( Glib::ustring url ) noexcept( false )
     }
     while ( res != CURLE_OK );
 
-    std::shared_ptr<json_t> root( json_loads( json_buff.buff , 0 , nullptr ) , json_decref );
-    if ( root.get() == nullptr )
+    std::shared_ptr<JsonParser> root( json_parser_new() , g_object_unref );
+    if ( !json_parser_load_from_data( root.get() , json_buff.buff , json_buff.current_size , nullptr ) )
     {
         except_message += ":network json:'";
         except_message += json_buff.buff;
@@ -131,8 +131,6 @@ static std::shared_ptr<json_t> get_json( Glib::ustring url ) noexcept( false )
 
 static xmage_desc_t get_last_release_version( void ) noexcept( false )
 {
-    std::string except_message( __func__ );
-    Glib::ustring api_url = "https://api.github.com/repos/magefree/mage/releases/latest";
     //{
     //    ... unimportant ...
     //    "name": "xmage_1.4.35V0",
@@ -152,49 +150,21 @@ static xmage_desc_t get_last_release_version( void ) noexcept( false )
     //    ... unimportant ...
     //}
 
-    std::shared_ptr<json_t> root = get_json( api_url );
+    Glib::ustring api_url = "https://api.github.com/repos/magefree/mage/releases/latest";
+    std::shared_ptr<JsonParser> root = get_json( api_url );
 
-    json_t * assets_array = json_object_get( root.get() , "assets" );
-    if ( json_is_array( assets_array ) == false )
-    {
-        except_message += ":network json:'";
-        std::shared_ptr<char> jsons( json_dumps( assets_array , JSON_INDENT( 4 ) ) , free );
-        except_message += jsons.get();
-        except_message += "' node 'assets' format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
-    //last version:V0 V0a V0b ... 0Vz,json_array_size( assets_array ) ->C array index style
-    json_t * last_assets = json_array_get( assets_array , json_array_size( assets_array ) - 1 );
-    if ( json_is_object( last_assets ) == false )
-    {
-        except_message += ":network json:'";
-        std::shared_ptr<char> jsons( json_dumps( last_assets , JSON_INDENT( 4 ) ) , free );
-        except_message += jsons.get();
-        except_message += "' element 0 format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
+    JsonNode * root_node = json_parser_get_root( root.get() );
+    std::shared_ptr<JsonPath> path( json_path_new() , g_object_unref );
+    json_path_compile( path.get() , "$.assets[0].browser_download_url" , nullptr );
+    std::shared_ptr<JsonNode> urls_node( json_path_match( path.get() , root_node ), json_node_unref );
+    JsonArray * urls_arr = json_node_get_array( urls_node.get() );
+    JsonNode * url_node = json_array_get_element( urls_arr , 0 );
+    json_path_compile( path.get() , "$.assets[0].name" , nullptr );
+    std::shared_ptr<JsonNode> vers_node( json_path_match( path.get() , root_node ), json_node_unref );
+    JsonArray * vers_arr = json_node_get_array( vers_node.get() );
+    JsonNode * ver_node = json_array_get_element( vers_arr , 0 );
 
-    json_t * download_url = json_object_get( last_assets , "browser_download_url" );
-    if ( json_is_string( download_url ) == false )
-    {
-        except_message += ":network json:'";
-        std::shared_ptr<char> jsons( json_dumps( last_assets , JSON_INDENT( 4 ) ) , free );
-        except_message += jsons.get();
-        except_message += "' format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
-    json_t * version_name = json_object_get( last_assets , "name" );
-    if ( json_is_string( version_name ) == false )
-    {
-        except_message += ":network json:'";
-        std::shared_ptr<char> jsons( json_dumps( last_assets , JSON_INDENT( 4 ) ) , free );
-        except_message += jsons.get();
-        except_message += "' node 'name' format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
-    Glib::ustring zip_name( json_string_value( version_name ) );
-    Glib::ustring version = zip_name;
-    
+    Glib::ustring version( json_node_get_string( ver_node ) );
     if ( Glib::str_has_prefix( version , "xmage_" ) )
     {
         //"xmage_" exists NUL sizeof 6
@@ -206,7 +176,7 @@ static xmage_desc_t get_last_release_version( void ) noexcept( false )
         version = version.substr( 0 , version.size() - ( sizeof( ".zip" ) - 1 ) );
     }
 
-    return { version , json_string_value( download_url ) };
+    return { version , json_node_get_string( url_node ) };
 }
 
 static xmage_desc_t get_last_release_mirror_version( void ) noexcept( false )
@@ -229,52 +199,22 @@ static xmage_desc_t get_last_release_mirror_version( void ) noexcept( false )
     //    } 
     //}
     //}
-    std::string except_message( __func__ );
     Glib::ustring api_url = "http://xmage.de/xmage/config.json";
+    std::shared_ptr<JsonParser> root = get_json( api_url );
 
-    std::shared_ptr<json_t> root = get_json( api_url );
-
-    json_t * xmage_desc = json_object_get( root.get() , "XMage" );
-    if ( json_is_object( xmage_desc ) == false )
-    {
-        except_message += ":network json:'";
-        std::shared_ptr<char> jsons( json_dumps( xmage_desc , JSON_INDENT( 4 ) ) , free );
-        except_message += jsons.get();
-        except_message += "' node 'XMage' format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
-
-    json_t * download_urls = json_object_get( xmage_desc , "locations" );
-    if ( json_is_array( download_urls ) == false )
-    {
-        except_message += ":network json:'";
-        std::shared_ptr<char> jsons( json_dumps( download_urls , JSON_INDENT( 4 ) ) , free );
-        except_message += jsons.get();
-        except_message += "' node 'locations' format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
-    json_t * download_url = json_array_get( download_urls , json_array_size( download_urls ) - 1 );
-    if ( json_is_string( download_url ) == false )
-    {
-        except_message += ":network json:'";
-        std::shared_ptr<char> jsons( json_dumps( download_urls , JSON_INDENT( 4 ) ) , free );
-        except_message += jsons.get();
-        except_message += "' node 'locations' format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
-
-    json_t * version_name = json_object_get( xmage_desc , "version" );
-    if ( json_is_string( version_name ) == false )
-    {
-        except_message += ":network json:'";
-        std::shared_ptr<char> jsons( json_dumps( version_name , JSON_INDENT( 4 ) ) , free );
-        except_message += jsons.get();
-        except_message += "' node 'version' format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
+    JsonNode * root_node = json_parser_get_root( root.get() );
+    std::shared_ptr<JsonPath> path( json_path_new() , g_object_unref );
+    json_path_compile( path.get() , "$.XMage.locations[0]" , nullptr );
+    std::shared_ptr<JsonNode> urls_node( json_path_match( path.get() , root_node ), json_node_unref );
+    JsonArray * urls_arr = json_node_get_array( urls_node.get() );
+    JsonNode * url_node = json_array_get_element( urls_arr , 0 );
+    json_path_compile( path.get() , "$.XMage.version" , nullptr );
+    std::shared_ptr<JsonNode> vers_node( json_path_match( path.get() , root_node ), json_node_unref );
+    JsonArray * vers_arr = json_node_get_array( vers_node.get() );
+    JsonNode * ver_node = json_array_get_element( vers_arr , 0 );
 
     //"1.4.35V1 (2019-04-24)",
-    Glib::ustring version_time( json_string_value( version_name ) );
+    Glib::ustring version_time( json_node_get_string( ver_node ) );
     std::size_t space_index = 0;
     for ( std::size_t i = 0 ; i < version_time.size() ; i++ )
     {
@@ -287,14 +227,11 @@ static xmage_desc_t get_last_release_mirror_version( void ) noexcept( false )
     //1.4.35V1
     Glib::ustring version = version_time.substr( 0 , space_index );
 
-    return { version , json_string_value( download_url ) };
+    return { version , json_node_get_string( url_node ) };
 }
 
 static xmage_desc_t get_last_beta_version( void ) noexcept( false )
 {
-    std::string except_message( __func__ );
-    Glib::ustring api_url = "http://xmage.today/config.json";
-
     //{
     //    "java": {
     //        "version": "1.8.0_201",
@@ -314,39 +251,21 @@ static xmage_desc_t get_last_beta_version( void ) noexcept( false )
     //    }
     //}
 
-    std::shared_ptr<json_t> root = get_json( api_url );
+    Glib::ustring api_url = "http://xmage.today/config.json";
+    std::shared_ptr<JsonParser> root = get_json( api_url );
 
-    json_t * client_node = json_object_get( root.get() , "XMage" );
-    if ( json_is_object( client_node ) == false )
-    {
-        except_message += ":network json:'";
-        std::shared_ptr<char> jsons( json_dumps( client_node , JSON_INDENT( 4 ) ) , free );
-        except_message += jsons.get();
-        except_message += "' node 'XMage' format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
+    JsonNode * root_node = json_parser_get_root( root.get() );
+    std::shared_ptr<JsonPath> path( json_path_new() , g_object_unref );
+    json_path_compile( path.get() , "$.XMage.full" , nullptr );
+    std::shared_ptr<JsonNode> urls_node( json_path_match( path.get() , root_node ), json_node_unref );
+    JsonArray * urls_arr = json_node_get_array( urls_node.get() );
+    JsonNode * url_node = json_array_get_element( urls_arr , 0 );
+    json_path_compile( path.get() , "$.XMage.version" , nullptr );
+    std::shared_ptr<JsonNode> vers_node( json_path_match( path.get() , root_node ), json_node_unref );
+    JsonArray * vers_arr = json_node_get_array( vers_node.get() );
+    JsonNode * ver_node = json_array_get_element( vers_arr , 0 );
 
-    json_t * version = json_object_get( client_node , "version" );
-    if ( json_is_string( version ) == false )
-    {
-        except_message += ":network json:'";
-        std::shared_ptr<char> jsons( json_dumps( client_node , JSON_INDENT( 4 ) ) , free );
-        except_message += jsons.get();
-        except_message += "' node 'version' format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
-
-    json_t * download_url = json_object_get( client_node , "full" );
-    if ( json_is_string( download_url ) == false )
-    {
-        except_message += ":network json:'";
-        std::shared_ptr<char> jsons( json_dumps( client_node , JSON_INDENT( 4 ) ) , free );
-        except_message += jsons.get();
-        except_message += "' format does not meet expectations";
-        throw std::invalid_argument( except_message );
-    }
-
-    return { json_string_value( version ) , json_string_value( download_url ) };
+    return { json_node_get_string( ver_node ) , json_node_get_string( url_node ) };
 }
 
 static bool download_update_callback( xmage_desc_t version_desc , progress_t * download_desc )
@@ -625,9 +544,9 @@ std::shared_future<xmage_desc_t> get_last_version( XmageType type )
     if ( type == XmageType::Release )
     {
         if ( using_mirror )
-            get_version_func = get_last_release_version;
-        else
             get_version_func = get_last_release_mirror_version;
+        else
+            get_version_func = get_last_release_version;
     }
     else
     {

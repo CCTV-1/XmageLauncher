@@ -1,11 +1,12 @@
-CC=g++
+CXX=g++
 FLAGS=-Wall -Wextra -Wpedantic -std=gnu++17 -m64
 GLIB_COMPILE_RESOURCES=glib-compile-resources
 LIBZIP_FLAGS=$(shell pkg-config --cflags --libs libzip)
 CURL_FLAGS=$(shell pkg-config --cflags --libs libcurl)
 GTKMM_FLAGS=$(shell pkg-config --cflags --libs gtkmm-3.0)
-GLIBMM_FLAGS=$(shell pkg-config --cflags glibmm-2.4)
-JANSSON_FLAGS=$(shell pkg-config --cflags --libs jansson)
+GLIBMM_FLAGS=$(shell pkg-config --cflags --libs glibmm-2.4)
+GLIBJSON_INCLUDE=$(shell pkg-config --cflags json-glib-1.0)
+GLIBJSON_LIBS=$(shell pkg-config --cflags --libs json-glib-1.0)
 OS= $(shell uname -o)
 
 ifeq ($(OS),Msys)
@@ -20,13 +21,13 @@ ifdef DEBUG
 endif
 
 XmageLauncher: src/main.cpp launcher.o
-	$(CC) src/main.cpp src/launcher-resources.cpp launcher.o launcherconfig.o utilities.o $(FLAGS) $(GTKMM_FLAGS) $(CURL_FLAGS) $(JANSSON_FLAGS) $(LIBZIP_FLAGS) -o XmageLauncher
+	$(CXX) src/main.cpp src/launcher-resources.cpp launcher.o launcherconfig.o utilities.o $(FLAGS) $(GTKMM_FLAGS) $(CURL_FLAGS) $(GLIBJSON_LIBS) $(LIBZIP_FLAGS) -o XmageLauncher
 launcher.o: src/launcher.cpp src/launcher-resources.cpp launcherconfig.o utilities.o
-	$(CC) src/launcher.cpp $(FLAGS) $(GTKMM_FLAGS) -c -o launcher.o
+	$(CXX) src/launcher.cpp $(FLAGS) $(GTKMM_FLAGS) -c -o launcher.o
 launcherconfig.o: src/launcherconfig.cpp src/launcherconfig.h
-	$(CC) src/launcherconfig.cpp $(FLAGS) $(GLIBMM_FLAGS) -c -o launcherconfig.o
+	$(CXX) src/launcherconfig.cpp $(FLAGS) $(GLIBMM_FLAGS) -c -o launcherconfig.o
 utilities.o: src/utilities.cpp src/utilities.h
-	$(CC) src/utilities.cpp $(FLAGS) $(GTKMM_FLAGS) -c -o utilities.o
+	$(CXX) src/utilities.cpp $(FLAGS) $(GLIBJSON_LIBS) $(LIBZIP_FLAGS) $(GTKMM_FLAGS) -c -o utilities.o
 src/launcher-resources.cpp: resources/resources.xml $(shell $(GLIB_COMPILE_RESOURCES) --generate-dependencies resources/resources.xml)
 	$(GLIB_COMPILE_RESOURCES) --generate-source resources/resources.xml --target=src/launcher-resources.cpp
 LANGUAGE:po/zh_CN.po po/en_US.po

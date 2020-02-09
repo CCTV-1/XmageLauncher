@@ -1,5 +1,4 @@
 #include <curl/curl.h>
-#include <jansson.h>
 #include <gtkmm.h>
 #include <glibmm/i18n.h>
 
@@ -10,7 +9,6 @@ int main ( int argc , char * argv[] )
     bindtextdomain( "XmageLauncher" , "locale/" );
     bind_textdomain_codeset( "XmageLauncher" , "UTF-8" );
     textdomain( "XmageLauncher" );
-    json_set_alloc_funcs( malloc , free );
     if ( curl_global_init( CURL_GLOBAL_ALL ) != 0 )
     {
         g_log( __func__ , G_LOG_LEVEL_ERROR , "network module initial faliure" );
