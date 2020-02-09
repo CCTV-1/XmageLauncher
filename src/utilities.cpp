@@ -129,143 +129,27 @@ static std::shared_ptr<JsonParser> get_json( Glib::ustring url ) noexcept( false
     return root;
 }
 
-static xmage_desc_t get_last_release_version( void ) noexcept( false )
+static xmage_desc_t get_update_desc( const char * api_url , const char * url_jsonpath , const char * ver_jsonpath , std::function<void(xmage_desc_t&)> formatter = nullptr )
 {
-    //{
-    //    ... unimportant ...
-    //    "name": "xmage_1.4.35V0",
-    //    ... unimportant ...
-    //    "assets": [
-    //        {
-    //            "name": "mage_1.4.35V0.zip"
-    //            ... unimportant ...
-    //            "browser_download_url": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V0/xmage_1.4.35V0.zip"
-    //        }
-    //        {
-    //            "name": "mage_1.4.35V0a.zip"
-    //            ... unimportant ...
-    //            "browser_download_url": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V0/xmage_1.4.35V0a.zip"
-    //        }
-    //    ],
-    //    ... unimportant ...
-    //}
-
-    Glib::ustring api_url = "https://api.github.com/repos/magefree/mage/releases/latest";
     std::shared_ptr<JsonParser> root = get_json( api_url );
 
     JsonNode * root_node = json_parser_get_root( root.get() );
     std::shared_ptr<JsonPath> path( json_path_new() , g_object_unref );
-    json_path_compile( path.get() , "$.assets[0].browser_download_url" , nullptr );
+    json_path_compile( path.get() , url_jsonpath , nullptr );
     std::shared_ptr<JsonNode> urls_node( json_path_match( path.get() , root_node ), json_node_unref );
     JsonArray * urls_arr = json_node_get_array( urls_node.get() );
     JsonNode * url_node = json_array_get_element( urls_arr , 0 );
-    json_path_compile( path.get() , "$.assets[0].name" , nullptr );
+    json_path_compile( path.get() , ver_jsonpath , nullptr );
     std::shared_ptr<JsonNode> vers_node( json_path_match( path.get() , root_node ), json_node_unref );
     JsonArray * vers_arr = json_node_get_array( vers_node.get() );
     JsonNode * ver_node = json_array_get_element( vers_arr , 0 );
 
-    Glib::ustring version( json_node_get_string( ver_node ) );
-    if ( Glib::str_has_prefix( version , "xmage_" ) )
+    xmage_desc_t raw_desc = { json_node_get_string( ver_node ) , json_node_get_string( url_node ) };
+    if ( formatter != nullptr )
     {
-        //"xmage_" exists NUL sizeof 6
-        version = version.substr( sizeof( "xmage_" ) - 1 , version.size() );
+        formatter( raw_desc );
     }
-    if ( Glib::str_has_suffix( version , ".zip" ) )
-    {
-        //".zip" exists NUL sizeof 5
-        version = version.substr( 0 , version.size() - ( sizeof( ".zip" ) - 1 ) );
-    }
-
-    return { version , json_node_get_string( url_node ) };
-}
-
-static xmage_desc_t get_last_release_mirror_version( void ) noexcept( false )
-{
-    //{
-    //"java" : {
-    //    "version": "1.8.0_201",
-    //    "old_location": "http://download.oracle.com/otn-pub/java/jdk/8u201-b09/42970487e3af4f5aa5bca3f542482c60/jre-8u201-",
-    //    "location": "http://xmage.today/java/jre-8u201-"
-    //},
-    //"XMage" : {
-    //    "version": "1.4.35V1 (2019-04-24)",
-    //    "location": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V1/xmage_1.4.35V1.zip",
-    //    "locations": ["http://xmage.de/files/xmage_1.4.35V1.zip"],
-    //    "torrent": "",
-    //    "images": "",
-    //    "Launcher" : {
-    //    "version": "0.3.8",
-    //    "location": "http://bit.ly/xmageLauncher038"
-    //    } 
-    //}
-    //}
-    Glib::ustring api_url = "http://xmage.de/xmage/config.json";
-    std::shared_ptr<JsonParser> root = get_json( api_url );
-
-    JsonNode * root_node = json_parser_get_root( root.get() );
-    std::shared_ptr<JsonPath> path( json_path_new() , g_object_unref );
-    json_path_compile( path.get() , "$.XMage.locations[0]" , nullptr );
-    std::shared_ptr<JsonNode> urls_node( json_path_match( path.get() , root_node ), json_node_unref );
-    JsonArray * urls_arr = json_node_get_array( urls_node.get() );
-    JsonNode * url_node = json_array_get_element( urls_arr , 0 );
-    json_path_compile( path.get() , "$.XMage.version" , nullptr );
-    std::shared_ptr<JsonNode> vers_node( json_path_match( path.get() , root_node ), json_node_unref );
-    JsonArray * vers_arr = json_node_get_array( vers_node.get() );
-    JsonNode * ver_node = json_array_get_element( vers_arr , 0 );
-
-    //"1.4.35V1 (2019-04-24)",
-    Glib::ustring version_time( json_node_get_string( ver_node ) );
-    std::size_t space_index = 0;
-    for ( std::size_t i = 0 ; i < version_time.size() ; i++ )
-    {
-        if ( version_time[i] == ' ' )
-        {
-            space_index = i;
-            break;
-        }
-    }
-    //1.4.35V1
-    Glib::ustring version = version_time.substr( 0 , space_index );
-
-    return { version , json_node_get_string( url_node ) };
-}
-
-static xmage_desc_t get_last_beta_version( void ) noexcept( false )
-{
-    //{
-    //    "java": {
-    //        "version": "1.8.0_201",
-    //        "location": "http://xmage.today/java/jre-8u201-"
-    //    },
-    //    "XMage": {
-    //        "version": "1.4.35.dev_2019-04-24_20-55",
-    //        "location": "http://xmage.today/files/mage-update_1.4.35.dev_2019-04-24_20-55.zip",
-    //        "locations": [],
-    //        "full": "http://xmage.today/files/mage-full_1.4.35.dev_2019-04-24_20-55.zip",
-    //        "torrent": "",
-    //        "images": "",
-    //        "Launcher": {
-    //            "version": "0.3.8",
-    //            "location": "http://bit.ly/xmageLauncher038"
-    //        }
-    //    }
-    //}
-
-    Glib::ustring api_url = "http://xmage.today/config.json";
-    std::shared_ptr<JsonParser> root = get_json( api_url );
-
-    JsonNode * root_node = json_parser_get_root( root.get() );
-    std::shared_ptr<JsonPath> path( json_path_new() , g_object_unref );
-    json_path_compile( path.get() , "$.XMage.full" , nullptr );
-    std::shared_ptr<JsonNode> urls_node( json_path_match( path.get() , root_node ), json_node_unref );
-    JsonArray * urls_arr = json_node_get_array( urls_node.get() );
-    JsonNode * url_node = json_array_get_element( urls_arr , 0 );
-    json_path_compile( path.get() , "$.XMage.version" , nullptr );
-    std::shared_ptr<JsonNode> vers_node( json_path_match( path.get() , root_node ), json_node_unref );
-    JsonArray * vers_arr = json_node_get_array( vers_node.get() );
-    JsonNode * ver_node = json_array_get_element( vers_arr , 0 );
-
-    return { json_node_get_string( ver_node ) , json_node_get_string( url_node ) };
+    return raw_desc;
 }
 
 static bool download_update_callback( xmage_desc_t version_desc , progress_t * download_desc )
@@ -544,13 +428,100 @@ std::shared_future<xmage_desc_t> get_last_version( XmageType type )
     if ( type == XmageType::Release )
     {
         if ( using_mirror )
-            get_version_func = get_last_release_mirror_version;
+        {
+            //{
+            //  "java" : {
+            //      "version": "1.8.0_201",
+            //      "old_location": "http://download.oracle.com/otn-pub/java/jdk/8u201-b09/42970487e3af4f5aa5bca3f542482c60/jre-8u201-",
+            //      "location": "http://xmage.today/java/jre-8u201-"
+            //  },
+            //  "XMage" : {
+            //      "version": "1.4.35V1 (2019-04-24)",
+            //      "location": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V1/xmage_1.4.35V1.zip",
+            //      "locations": ["http://xmage.de/files/xmage_1.4.35V1.zip"],
+            //      "torrent": "",
+            //      "images": "",
+            //      "Launcher" : {
+            //      "version": "0.3.8",
+            //      "location": "http://bit.ly/xmageLauncher038"
+            //      } 
+            //  }
+            //}
+            get_version_func = std::bind( get_update_desc , "http://xmage.de/xmage/config.json" , "$.XMage.locations[0]" , "$.XMage.version",
+                []( xmage_desc_t& raw )
+                {
+                    //"1.4.35V1 (2019-04-24)",
+                    Glib::ustring version_time = raw.version_name;
+                    std::size_t space_index = 0;
+                    for ( std::size_t i = 0 ; i < version_time.size() ; i++ )
+                    {
+                        if ( version_time[i] == ' ' )
+                        {
+                            space_index = i;
+                            break;
+                        }
+                    }
+                    //1.4.35V1
+                    raw.version_name = version_time.substr( 0 , space_index );
+                }
+            );
+        }
         else
-            get_version_func = get_last_release_version;
+        {
+            //{
+            //    ... unimportant ...
+            //    "assets": [
+            //        {
+            //            "name": "mage_1.4.35V0.zip"
+            //            ... unimportant ...
+            //            "browser_download_url": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V0/xmage_1.4.35V0.zip"
+            //        }
+            //        {
+            //            "name": "mage_1.4.35V0a.zip"
+            //            ... unimportant ...
+            //            "browser_download_url": "https://github.com/magefree/mage/releases/download/xmage_1.4.35V0/xmage_1.4.35V0a.zip"
+            //        }
+            //    ],
+            //    ... unimportant ...
+            //}
+            get_version_func = std::bind( get_update_desc , "https://api.github.com/repos/magefree/mage/releases/latest" , "$.assets[0].browser_download_url" , "$.assets[0].name",
+                []( xmage_desc_t& raw )
+                {
+                    if ( Glib::str_has_prefix( raw.version_name , "xmage_" ) )
+                    {
+                        //"xmage_" exists NUL sizeof 6
+                        raw.version_name = raw.version_name.substr( sizeof( "xmage_" ) - 1 , raw.version_name.size() );
+                    }
+                    if ( Glib::str_has_suffix( raw.version_name , ".zip" ) )
+                    {
+                        //".zip" exists NUL sizeof 5
+                        raw.version_name = raw.version_name.substr( 0 , raw.version_name.size() - ( sizeof( ".zip" ) - 1 ) );
+                    }
+                }
+            );
+        }
     }
     else
     {
-        get_version_func = get_last_beta_version;
+        //{
+        //    "java": {
+        //        "version": "1.8.0_201",
+        //        "location": "http://xmage.today/java/jre-8u201-"
+        //    },
+        //    "XMage": {
+        //        "version": "1.4.35.dev_2019-04-24_20-55",
+        //        "location": "http://xmage.today/files/mage-update_1.4.35.dev_2019-04-24_20-55.zip",
+        //        "locations": [],
+        //        "full": "http://xmage.today/files/mage-full_1.4.35.dev_2019-04-24_20-55.zip",
+        //        "torrent": "",
+        //        "images": "",
+        //        "Launcher": {
+        //            "version": "0.3.8",
+        //            "location": "http://bit.ly/xmageLauncher038"
+        //        }
+        //    }
+        //}
+        get_version_func = std::bind( get_update_desc , "http://xmage.today/config.json" , "$.XMage.full" , "$.XMage.version" , nullptr );
     }
 
     std::packaged_task<xmage_desc_t()> task( get_version_func );
