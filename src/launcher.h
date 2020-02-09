@@ -10,7 +10,7 @@
 #include <gtkmm/window.h>
 
 #include "launcherconfig.h"
-#include "utilities.h"
+#include "updatework.h"
 
 class XmageLauncher : public Gtk::Window
 {

@@ -12,7 +12,7 @@
 #include <giomm/file.h>
 #include <glibmm/i18n.h>
 
-#include "utilities.h"
+#include "updatework.h"
 #include "launcherconfig.h"
 
 typedef struct JsonBuff
@@ -150,6 +150,16 @@ static xmage_desc_t get_update_desc( const char * api_url , const char * url_jso
         formatter( raw_desc );
     }
     return raw_desc;
+}
+
+static Glib::ustring get_installation_package_name( const xmage_desc_t& version_desc )
+{
+    return version_desc.version_name + ".zip";
+}
+
+static Glib::ustring get_download_temp_name( const xmage_desc_t& version_desc )
+{
+    return version_desc.version_name + ".dl";
 }
 
 static bool download_update_callback( xmage_desc_t version_desc , progress_t * download_desc )
@@ -420,7 +430,7 @@ bool set_proxy( Glib::ustring scheme , Glib::ustring hostname , std::uint32_t po
     return true;
 }
 
-std::shared_future<xmage_desc_t> get_last_version( XmageType type )
+static std::shared_future<xmage_desc_t> get_last_version( XmageType type )
 {
     config_t& config = config_t::get_config();
     bool using_mirror = config.get_using_mirror();
@@ -531,7 +541,7 @@ std::shared_future<xmage_desc_t> get_last_version( XmageType type )
     return version_future;
 }
 
-std::shared_future<bool> download_update( xmage_desc_t version_desc , progress_t * download_desc )
+static std::shared_future<bool> download_update( xmage_desc_t version_desc , progress_t * download_desc )
 {
     std::packaged_task<bool()> task( std::bind( download_update_callback , version_desc , download_desc ) );
     std::shared_future<bool> download_future = task.get_future();
@@ -540,17 +550,7 @@ std::shared_future<bool> download_update( xmage_desc_t version_desc , progress_t
     return download_future;
 }
 
-Glib::ustring get_installation_package_name( xmage_desc_t version_desc )
-{
-    return version_desc.version_name + ".zip";
-}
-
-Glib::ustring get_download_temp_name( xmage_desc_t version_desc )
-{
-    return version_desc.version_name + ".dl";
-}
-
-std::shared_future<bool> install_update( Glib::ustring install_packge_name , Glib::ustring install_dir_path , progress_t * progress )
+static std::shared_future<bool> install_update( Glib::ustring install_packge_name , Glib::ustring install_dir_path , progress_t * progress )
 {
     std::packaged_task<bool()> task( std::bind( install_update_callback , install_packge_name , install_dir_path , progress ) );
     std::shared_future<bool> unzip_future = task.get_future();

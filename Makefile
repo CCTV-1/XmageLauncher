@@ -21,13 +21,13 @@ ifdef DEBUG
 endif
 
 XmageLauncher: src/main.cpp launcher.o
-	$(CXX) src/main.cpp src/launcher-resources.cpp launcher.o launcherconfig.o utilities.o $(FLAGS) $(GTKMM_FLAGS) $(CURL_FLAGS) $(GLIBJSON_LIBS) $(LIBZIP_FLAGS) -o XmageLauncher
-launcher.o: src/launcher.cpp src/launcher-resources.cpp launcherconfig.o utilities.o
+	$(CXX) src/main.cpp src/launcher-resources.cpp launcher.o launcherconfig.o updatework.o $(FLAGS) $(GTKMM_FLAGS) $(CURL_FLAGS) $(GLIBJSON_LIBS) $(LIBZIP_FLAGS) -o XmageLauncher
+launcher.o: src/launcher.cpp src/launcher-resources.cpp launcherconfig.o updatework.o
 	$(CXX) src/launcher.cpp $(FLAGS) $(GTKMM_FLAGS) -c -o launcher.o
 launcherconfig.o: src/launcherconfig.cpp src/launcherconfig.h
 	$(CXX) src/launcherconfig.cpp $(FLAGS) $(GLIBMM_FLAGS) -c -o launcherconfig.o
-utilities.o: src/utilities.cpp src/utilities.h
-	$(CXX) src/utilities.cpp $(FLAGS) $(GLIBJSON_LIBS) $(LIBZIP_FLAGS) $(GTKMM_FLAGS) -c -o utilities.o
+updatework.o: src/updatework.cpp src/updatework.h
+	$(CXX) src/updatework.cpp $(FLAGS) $(GLIBJSON_LIBS) $(LIBZIP_FLAGS) $(GTKMM_FLAGS) -c -o updatework.o
 src/launcher-resources.cpp: resources/resources.xml $(shell $(GLIB_COMPILE_RESOURCES) --generate-dependencies resources/resources.xml)
 	$(GLIB_COMPILE_RESOURCES) --generate-source resources/resources.xml --target=src/launcher-resources.cpp
 LANGUAGE:po/zh_CN.po po/en_US.po
@@ -45,9 +45,9 @@ ifeq ("$(wildcard po/zh_CN.po)","")
 else
 	msgmerge -U po/zh_CN.po po/XmageLauncher.pot
 endif
-po/XmageLauncher.pot: resources/Launcher.ui.h src/launcher.cpp src/utilities.cpp
-	xgettext --language=C++ --keyword=_ --keyword=N_ --output=po/XmageLauncher.pot resources/Launcher.ui.h src/launcher.cpp src/utilities.cpp
+po/XmageLauncher.pot: resources/Launcher.ui.h src/launcher.cpp src/updatework.cpp
+	xgettext --language=C++ --keyword=_ --keyword=N_ --output=po/XmageLauncher.pot resources/Launcher.ui.h src/launcher.cpp src/updatework.cpp
 resources/Launcher.ui.h: resources/Launcher.ui
 	intltool-extract --type=gettext/glade resources/Launcher.ui
 clean:
-	-rm XmageLauncher launcher.o launcherconfig.o utilities.o
+	-rm XmageLauncher launcher.o launcherconfig.o updatework.o

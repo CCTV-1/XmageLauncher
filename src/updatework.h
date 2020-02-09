@@ -1,6 +1,6 @@
 #pragma once
-#ifndef NETWORKUTILITIES_H
-#define NETWORKUTILITIES_H
+#ifndef UPDATEWORK_H
+#define UPDATEWORK_H
 
 #include <cstdint>
 
@@ -50,15 +50,5 @@ Glib::ustring xmagetype_to_string( const XmageType& type );
 //argument hostname: host name or dotted numerical IP address. A numerical IPv6 address must be written within [brackets].
 //scheme type see enum curl_proxytype
 bool set_proxy( Glib::ustring scheme , Glib::ustring hostname , std::uint32_t port );
-
-std::shared_future<xmage_desc_t> get_last_version( XmageType type );
-
-std::shared_future<bool> download_update( xmage_desc_t desc , progress_t * download_now = nullptr );
-
-std::shared_future<bool> install_update( Glib::ustring install_packge_name , Glib::ustring install_dir_path , progress_t * progress );
-
-Glib::ustring get_installation_package_name( xmage_desc_t desc );
-
-Glib::ustring get_download_temp_name( xmage_desc_t desc );
 
 #endif

@@ -4,7 +4,7 @@
 
 #include <glibmm.h>
 
-#include "utilities.h"
+#include "updatework.h"
 
 typedef class LauncherConfig
 {
