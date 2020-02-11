@@ -142,7 +142,7 @@ static xmage_desc_t get_update_desc( const char * api_url , const char * url_jso
     JsonArray * urls_arr = json_node_get_array( urls_node.get() );
     JsonNode * url_node = json_array_get_element( urls_arr , 0 );
     std::shared_ptr<JsonNode> vers_node( json_path_query( ver_jsonpath , root_node , nullptr ), json_node_unref );
-    if ( json_node_get_node_type( urls_node.get() ) != JsonNodeType::JSON_NODE_ARRAY )
+    if ( json_node_get_node_type( vers_node.get() ) != JsonNodeType::JSON_NODE_ARRAY )
     {
         throw std::runtime_error( std::string( "version json path" ) + ver_jsonpath + "can't find" );
     }
