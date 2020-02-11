@@ -15,12 +15,100 @@
 #include "updatework.h"
 #include "launcherconfig.h"
 
-typedef struct JsonBuff
+class ReceiveBuff
 {
+public:
+    ReceiveBuff()
+    {
+        constexpr const size_t presize = 1024;
+        this->buff = ( char * )malloc( sizeof( char )*presize );
+        this->allocate_size = presize;
+        this->used_size = 0;
+    }
+    ~ReceiveBuff()
+    {
+        free( this->buff );
+    }
+    ReceiveBuff( const ReceiveBuff& rhs )
+    {
+        this->buff = ( char * )malloc( sizeof( char )*(rhs.allocate_size) );
+        if ( this->buff == nullptr )
+        {
+            throw std::bad_alloc();
+        }
+        memccpy( this->buff , rhs.buff ,  sizeof( char ) , rhs.allocate_size );
+        this->allocate_size = rhs.allocate_size;
+        this->used_size = rhs.used_size;
+    }
+    ReceiveBuff& operator=( const ReceiveBuff& rhs )
+    {
+        if ( this == &rhs )
+        {
+            return *this;
+        }
+        free( this->buff );
+        this->buff = ( char * )malloc( sizeof( char )*(rhs.allocate_size) );
+        if ( this->buff == nullptr )
+        {
+            throw std::bad_alloc();
+        }
+        memccpy( this->buff , rhs.buff , sizeof( char ) , rhs.allocate_size );
+        this->allocate_size = rhs.allocate_size;
+        this->used_size = rhs.used_size;
+    }
+    ReceiveBuff( ReceiveBuff&& rhs ) noexcept( true ):
+        buff( std::move(rhs.buff) ),
+        allocate_size( std::move(rhs.allocate_size) ),
+        used_size( std::move(rhs.used_size) )
+    {
+        ;
+    }
+    ReceiveBuff& operator=( ReceiveBuff&& rhs ) noexcept( true )
+    {
+        if ( this == &rhs )
+        {
+            return *this;
+        }
+        free( this->buff );
+        this->buff = std::move( rhs.buff );
+        this->allocate_size = std::move( rhs.allocate_size );
+        this->used_size = std::move( rhs.used_size );
+    }
+
+    const char * get_buff( void )
+    {
+        return this->buff;
+    }
+    std::size_t get_used( void )
+    {
+        return this->used_size;
+    }
+
+    void append_data( const char * data , std::size_t data_size )
+    {
+        std::size_t need_size = used_size + data_size;
+        if ( need_size > this->allocate_size )
+        {
+            while ( need_size > this->allocate_size )
+            {
+                this->allocate_size *= 2;
+            }
+            char * new_buff = static_cast<char *>( realloc( this->buff , this->allocate_size ) );
+            if ( new_buff == nullptr )
+            {
+                //keep old buff content
+                throw std::bad_alloc();
+            }
+            this->buff = new_buff;
+        }
+        memccpy( this->buff + used_size , data , sizeof( char ) , data_size );
+        this->used_size += data_size;
+    }
+private:
     char * buff;
     std::size_t allocate_size;
-    std::size_t current_size;
-}json_buff_t;
+    std::size_t used_size;
+};
 
 static Glib::ustring _proxy_desc;
 
@@ -57,20 +145,15 @@ static int download_description_callback( void * client_ptr , curl_off_t dltotal
 static std::size_t get_json_callback( char * content , std::size_t size , std::size_t element_number , void * save_ptr )
 {
     std::size_t realsize = size*element_number;
-    json_buff_t * ptr = static_cast<json_buff_t *>( save_ptr );
-    std::size_t need_size = ptr->current_size + sizeof( char )*realsize + 1;
-    if ( need_size > ptr->allocate_size )
+    ReceiveBuff * ptr = static_cast<ReceiveBuff *>( save_ptr );
+    try
     {
-        if ( ptr->allocate_size == 0 )
-            ptr->allocate_size = 126;
-        while( need_size > ptr->allocate_size )
-            ptr->allocate_size *= 2;
-        char * new_buff = static_cast<char *>( realloc( ptr->buff , ptr->allocate_size ) );
-        ptr->buff = new_buff;
+        ptr->append_data( content , realsize );
     }
-    memccpy( &( ptr->buff[ ptr->current_size ] ) , content , 1 , realsize );
-    ptr->current_size += realsize;
-    ptr->buff[ ptr->current_size ] = '\0';
+    catch(const std::bad_alloc& e)
+    {
+        return 0;
+    }
     return realsize;
 }
 
@@ -80,7 +163,7 @@ static std::shared_ptr<JsonParser> get_json( Glib::ustring url ) noexcept( false
 
     std::int8_t re_try = 4;
     long default_timeout = 30L;
-    json_buff_t json_buff = { nullptr , 0 , 0 };
+    ReceiveBuff json_buff;
     char error_buff[CURL_ERROR_SIZE];
     //c str* safe
     error_buff[0] = '\0';
@@ -106,7 +189,7 @@ static std::shared_ptr<JsonParser> get_json( Glib::ustring url ) noexcept( false
         {
             if ( re_try == 0 )
             {
-                except_message += ":get last beta version failure,libcurl error message:";
+                except_message += ":get '" + url + "' json failure,libcurl error message:";
                 except_message += error_buff;
                 throw std::runtime_error( except_message );
             }
@@ -117,15 +200,14 @@ static std::shared_ptr<JsonParser> get_json( Glib::ustring url ) noexcept( false
     while ( res != CURLE_OK );
 
     std::shared_ptr<JsonParser> root( json_parser_new() , g_object_unref );
-    if ( !json_parser_load_from_data( root.get() , json_buff.buff , json_buff.current_size , nullptr ) )
+    if ( !json_parser_load_from_data( root.get() , json_buff.get_buff() , json_buff.get_used() , nullptr ) )
     {
         except_message += ":network json:'";
-        except_message += json_buff.buff;
+        except_message += json_buff.get_buff();
         except_message += "' format does not meet expectations";
         throw std::invalid_argument( except_message );
     }
 
-    free( json_buff.buff );
     return root;
 }
 
