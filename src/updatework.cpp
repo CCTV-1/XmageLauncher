@@ -594,17 +594,6 @@ static std::shared_future<xmage_desc_t> get_last_version( XmageType type )
                         //".zip" exists NUL sizeof 5
                         raw.version_name = raw.version_name.substr( 0 , raw.version_name.size() - ( sizeof( ".zip" ) - 1 ) );
                     }
-
-                    Glib::ustring from( "https://github.com" );
-                    Glib::ustring to( "http://github-mirror.bugkiller.org" );
-                    if( from.empty() )
-                        return;
-                    size_t start_pos = 0;
-                    while( ( start_pos = raw.download_url.find( from , start_pos ) ) != std::string::npos )
-                    {
-                        raw.download_url.replace( start_pos , from.length() , to );
-                        start_pos += to.length();
-                    }
                 }
             );
         }
