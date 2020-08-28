@@ -343,36 +343,54 @@ XmageLauncher::~XmageLauncher()
 
 void XmageLauncher::launch_client( void )
 {
-        //"java -Xms1024m -Xmx1024m -XX:MaxPermSize=384m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -jar .\lib\mage-client-1.4.35.jar"
-        Glib::ustring version = this->config.get_active_xmage_version();
+    const Glib::ustring javaw_path = this->config.get_javaw_path();
+    if (javaw_path.empty())
+    {
+        Gtk::MessageDialog confirm( Glib::ustring(_( "java runtime environment not found(need jre8 or jdk8)" )) , false , Gtk::MESSAGE_ERROR , Gtk::BUTTONS_OK , true );
+        confirm.set_position( Gtk::WindowPosition::WIN_POS_CENTER_ALWAYS );
+        confirm.run();
+        return ;
+    }
 
-        Glib::ustring xms_opt = Glib::ustring::compose( "-Xms%1m" , this->config.get_jvm_xms() );
-        Glib::ustring xmx_opt = Glib::ustring::compose( "-Xmx%1m" , this->config.get_jvm_xmx() );
-        std::vector<Glib::ustring> argvs({
-            this->config.get_javaw_path() , xms_opt , xmx_opt , 
-            "-XX:MaxPermSize=384m" , "-XX:+UseConcMarkSweepGC" ,
-            "-XX:+CMSClassUnloadingEnabled" , "-jar" , "./lib/mage-client-" + version + ".jar"
-        });
-        Glib::ustring client_path = this->config.get_active_xmage_client();
+    //"java -Xms1024m -Xmx1024m -XX:MaxPermSize=384m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -jar .\lib\mage-client-1.4.35.jar"
+    Glib::ustring version = this->config.get_active_xmage_version();
 
-        Glib::spawn_async_with_pipes( client_path , argvs );
+    Glib::ustring xms_opt = Glib::ustring::compose( "-Xms%1m" , this->config.get_jvm_xms() );
+    Glib::ustring xmx_opt = Glib::ustring::compose( "-Xmx%1m" , this->config.get_jvm_xmx() );
+    std::vector<Glib::ustring> argvs({
+        javaw_path , xms_opt , xmx_opt , 
+        "-XX:MaxPermSize=384m" , "-XX:+UseConcMarkSweepGC" ,
+        "-XX:+CMSClassUnloadingEnabled" , "-jar" , "./lib/mage-client-" + version + ".jar"
+    });
+    Glib::ustring client_path = this->config.get_active_xmage_client();
+
+    Glib::spawn_async_with_pipes( client_path , argvs );
 }
 
 void XmageLauncher::launch_server( void )
 {
-        //"java -Xms256M -Xmx512M -XX:MaxPermSize=256m -Djava.security.policy=./config/security.policy -Djava.util.logging.config.file=./config/logging.config -Dlog4j.configuration=file:./config/log4j.properties -jar ./lib/mage-server-1.4.35.jar"
-        Glib::ustring version = this->config.get_active_xmage_version();
+    const Glib::ustring javaw_path = this->config.get_javaw_path();
+    if (javaw_path.empty())
+    {
+        Gtk::MessageDialog confirm( Glib::ustring(_( "java runtime environment not found(need jre8 or jdk8)" )) , false , Gtk::MESSAGE_ERROR , Gtk::BUTTONS_OK , true );
+        confirm.set_position( Gtk::WindowPosition::WIN_POS_CENTER_ALWAYS );
+        confirm.run();
+        return ;
+    }
 
-        Glib::ustring xms_opt = Glib::ustring::compose( "-Xms%1m" , this->config.get_jvm_xms() );
-        Glib::ustring xmx_opt = Glib::ustring::compose( "-Xmx%1m" , this->config.get_jvm_xmx() );
-        std::vector<Glib::ustring> argvs({
-            this->config.get_java_path() , xms_opt , xmx_opt ,"-XX:MaxPermSize=384m" , "-Djava.security.policy=./config/security.policy",
-            "-Djava.util.logging.config.file=./config/logging.config" , "-Dlog4j.configuration=file:./config/log4j.properties"
-            , "-jar" , "./lib/mage-server-" + version + ".jar"
-        });
-        Glib::ustring server_path = this->config.get_active_xmage_serve();
+    //"java -Xms256M -Xmx512M -XX:MaxPermSize=256m -Djava.security.policy=./config/security.policy -Djava.util.logging.config.file=./config/logging.config -Dlog4j.configuration=file:./config/log4j.properties -jar ./lib/mage-server-1.4.35.jar"
+    Glib::ustring version = this->config.get_active_xmage_version();
 
-        Glib::spawn_async_with_pipes( server_path , argvs );
+    Glib::ustring xms_opt = Glib::ustring::compose( "-Xms%1m" , this->config.get_jvm_xms() );
+    Glib::ustring xmx_opt = Glib::ustring::compose( "-Xmx%1m" , this->config.get_jvm_xmx() );
+    std::vector<Glib::ustring> argvs({
+        this->config.get_java_path() , xms_opt , xmx_opt ,"-XX:MaxPermSize=384m" , "-Djava.security.policy=./config/security.policy",
+        "-Djava.util.logging.config.file=./config/logging.config" , "-Dlog4j.configuration=file:./config/log4j.properties"
+        , "-jar" , "./lib/mage-server-" + version + ".jar"
+    });
+    Glib::ustring server_path = this->config.get_active_xmage_serve();
+
+    Glib::spawn_async_with_pipes( server_path , argvs );
 }
 
 void XmageLauncher::show_setting( void )
