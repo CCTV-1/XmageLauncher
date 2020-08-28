@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-02-08 21:36+0800\n"
+"POT-Creation-Date: 2020-08-28 21:18+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -101,67 +101,71 @@ msgstr ""
 msgid "LauncherServer"
 msgstr ""
 
-#: src/launcher.cpp:190
+#: src/launcher.cpp:189
 msgid "close menu"
 msgstr ""
 
-#: src/launcher.cpp:209
+#: src/launcher.cpp:208
 msgid "do you want reset config?"
 msgstr ""
 
-#: src/utilities.cpp:679
+#: src/launcher.cpp:349 src/launcher.cpp:375
+msgid "java runtime environment not found(need jre8 or jdk8)"
+msgstr ""
+
+#: src/updatework.cpp:656
 msgid "Release"
 msgstr ""
 
-#: src/utilities.cpp:682
+#: src/updatework.cpp:659
 msgid "Beta"
 msgstr ""
 
-#: src/utilities.cpp:704
+#: src/updatework.cpp:681
 msgid "check for updates"
 msgstr ""
 
-#: src/utilities.cpp:760
+#: src/updatework.cpp:737
 msgid "check update failure"
 msgstr ""
 
-#: src/utilities.cpp:775
+#: src/updatework.cpp:752
 #, c-format
 msgid "last xmage version:'%s',download url:'%s'."
 msgstr ""
 
-#: src/utilities.cpp:778
+#: src/updatework.cpp:755
 msgid "exist new xmage,now download."
 msgstr ""
 
-#: src/utilities.cpp:784
+#: src/updatework.cpp:761
 msgid "no need to update"
 msgstr ""
 
-#: src/utilities.cpp:797
+#: src/updatework.cpp:774
 msgid "download update"
 msgstr ""
 
-#: src/utilities.cpp:821
+#: src/updatework.cpp:798
 msgid "download success"
 msgstr ""
 
-#: src/utilities.cpp:833
+#: src/updatework.cpp:810
 msgid "download failure"
 msgstr ""
 
-#: src/utilities.cpp:840
+#: src/updatework.cpp:817
 msgid "using local installation package"
 msgstr ""
 
-#: src/utilities.cpp:854
+#: src/updatework.cpp:831
 msgid "install update"
 msgstr ""
 
-#: src/utilities.cpp:876
+#: src/updatework.cpp:853
 msgid "install failure"
 msgstr ""
 
-#: src/utilities.cpp:885
+#: src/updatework.cpp:862
 msgid "install success"
 msgstr ""
