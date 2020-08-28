@@ -369,8 +369,8 @@ void XmageLauncher::launch_client( void )
 
 void XmageLauncher::launch_server( void )
 {
-    const Glib::ustring javaw_path = this->config.get_javaw_path();
-    if (javaw_path.empty())
+    const Glib::ustring java_path = this->config.get_java_path();
+    if (java_path.empty())
     {
         Gtk::MessageDialog confirm( Glib::ustring(_( "java runtime environment not found(need jre8 or jdk8)" )) , false , Gtk::MESSAGE_ERROR , Gtk::BUTTONS_OK , true );
         confirm.set_position( Gtk::WindowPosition::WIN_POS_CENTER_ALWAYS );
@@ -384,7 +384,7 @@ void XmageLauncher::launch_server( void )
     Glib::ustring xms_opt = Glib::ustring::compose( "-Xms%1m" , this->config.get_jvm_xms() );
     Glib::ustring xmx_opt = Glib::ustring::compose( "-Xmx%1m" , this->config.get_jvm_xmx() );
     std::vector<Glib::ustring> argvs({
-        this->config.get_java_path() , xms_opt , xmx_opt ,"-XX:MaxPermSize=384m" , "-Djava.security.policy=./config/security.policy",
+        java_path , xms_opt , xmx_opt ,"-XX:MaxPermSize=384m" , "-Djava.security.policy=./config/security.policy",
         "-Djava.util.logging.config.file=./config/logging.config" , "-Dlog4j.configuration=file:./config/log4j.properties"
         , "-jar" , "./lib/mage-server-" + version + ".jar"
     });
