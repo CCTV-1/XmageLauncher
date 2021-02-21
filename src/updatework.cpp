@@ -11,6 +11,8 @@
 #include <json-glib/json-glib.h>
 #include <giomm/file.h>
 #include <glibmm/i18n.h>
+#include <glibmm/stringutils.h>
+#include <glibmm/fileutils.h>
 
 #include "updatework.h"
 #include "launcherconfig.h"
@@ -413,12 +415,12 @@ static bool install_update_callback( Glib::ustring install_packge_name , Glib::u
             //avoid file_set_contents() write root/dir/ to root/dir
             //if write to root/dir,block write root/dir/file exception handler mkdir(root/dir/) failure.
             Gio::FileType type = target_path->query_file_type();
-            if ( type == Gio::FileType::FILE_TYPE_NOT_KNOWN )
+            if ( type == Gio::FileType::UNKNOWN )
             {
                 target_path->make_directory_with_parents();
             }
             //if exists root/dir remove it.
-            else if ( type != Gio::FileType::FILE_TYPE_DIRECTORY )
+            else if ( type != Gio::FileType::DIRECTORY )
             {
                 target_path->remove();
                 target_path->make_directory_with_parents();
@@ -442,7 +444,7 @@ static bool install_update_callback( Glib::ustring install_packge_name , Glib::u
             auto code = e.code();
             if ( code == Glib::FileError::Code::ACCESS_DENIED )
             {
-                if ( target_path->query_file_type() != Gio::FileType::FILE_TYPE_DIRECTORY )
+                if ( target_path->query_file_type() != Gio::FileType::DIRECTORY )
                     g_log( __func__ , G_LOG_LEVEL_MESSAGE , "access file:'%s failure',Glib::FileError code:%d" , target_path->get_path().c_str() , code );
             }
             else if ( code == Glib::FileError::Code::NO_SUCH_ENTITY )
@@ -451,7 +453,7 @@ static bool install_update_callback( Glib::ustring install_packge_name , Glib::u
 
                 //zip_get_num_entries ->exists 
                 Gio::FileType type = parent_dir->query_file_type();
-                if ( type == Gio::FileType::FILE_TYPE_NOT_KNOWN )
+                if ( type == Gio::FileType::UNKNOWN )
                 {
                     parent_dir->make_directory_with_parents();
                 }

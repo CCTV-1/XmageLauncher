@@ -3,9 +3,23 @@
 
 #include <unistd.h>
 
-#include <curl/curl.h>
-#include <gtkmm.h>
+#include <gtkmm/drawingArea.h>
+#include <gtkmm/filechooserdialog.h>
+#include <gtkmm/liststore.h>
+#include <gtkmm/messagedialog.h>
 #include <glibmm/i18n.h>
+#include <glibmm/ustring.h>
+#include <glibmm/spawn.h>
+#include <sigc++/signal.h>
+#include <sigc++/connection.h>
+
+#include <curl/curl.h>
+#ifdef WIN32
+#ifdef ERROR
+//in msys2-mingw64,curl include ERROR macro(in wingdi.h),glibmm-2.68/iochannel.h have a enum class IOStatus::ERROR,so include curl after glibmm.
+#undef ERROR
+#endif
+#endif
 
 #include "launcher.h"
 
@@ -19,6 +33,7 @@ public:
     {
         this->layout = this->create_pango_layout( "0%" );
         this->set_size_request( 30 );
+        this->set_draw_func(sigc::mem_fun(*this, &LauncherProgressBar::on_draw));
     }
     ~LauncherProgressBar()
     {
@@ -72,13 +87,7 @@ public:
     }
 
 protected:
-    void get_preferred_height_vfunc( int& minimum_width , int& natural_width ) const override
-    {
-        minimum_width = 30;
-        natural_width = 35;
-    }
-
-    bool on_draw( const Cairo::RefPtr<Cairo::Context>& cairo_context ) override
+    void on_draw( const Cairo::RefPtr<Cairo::Context>& cairo_context , int , int )
     {
         const Gtk::Allocation allocation = get_allocation();
         constexpr double line_width = 2;
@@ -106,7 +115,6 @@ protected:
         this->layout->get_pixel_size( layout_width , layout_height );
         cairo_context->move_to( ( allocation.get_width() - layout_width )/2 , ( allocation.get_height() - layout_height )/2 );
         this->layout->show_in_cairo_context( cairo_context );
-        return true;
     }
 
 private:
@@ -116,43 +124,52 @@ private:
     Glib::RefPtr<Pango::Layout> layout;
 };
 
-static void fill_setting_value( Glib::RefPtr<Gtk::Builder>& builder , config_t& config )
+class FileChooserButton : public Gtk::Button
 {
-    Gtk::ComboBox * proxy_type;
-    builder->get_widget( "ProxyType" , proxy_type );
-    if ( config.get_using_proxy() )
+public:
+    FileChooserButton( BaseObjectType* cobject , const Glib::RefPtr<Gtk::Builder>& , Glib::ustring chooser_behaviour
+        , Glib::ustring default_filename = "" ):
+        Gtk::Button( cobject ),
+        chooser_target(chooser_behaviour),
+        filename(default_filename),
+        chooserdialog(chooser_target)
     {
-        proxy_type->set_active_id( config.get_proxy_scheme() );
+        this->signal_clicked().connect(
+            [ this ]()
+            {
+                this->chooserdialog.show();
+            }
+        );
+
+        this->chooserdialog.signal_response().connect(
+            [ this ](int response_id)
+            {
+                this->chooserdialog.hide();
+                if (response_id == Gtk::ResponseType::OK)
+                {
+                    this->filename = this->chooserdialog.get_file()->get_path();
+                    this->set_label(this->filename);
+                }
+            }
+        );
     }
-    else
+
+    void set_filename( const Glib::ustring& name )
     {
-        proxy_type->set_active_id( "None" );
+        this->filename = name;
+        this->set_label(this->filename);
     }
 
-    Gtk::Entry * proxy_host;
-    builder->get_widget( "ProxyHost" , proxy_host );
-    proxy_host->set_text( config.get_proxy_host() );
+    const Glib::ustring& get_filename() const
+    {
+        return this->filename;
+    }
+private:
+    Glib::ustring chooser_target;
+    Glib::ustring filename;
 
-    Gtk::SpinButton * proxy_port;
-    builder->get_widget( "ProxyPort" , proxy_port );
-    proxy_port->set_value( config.get_proxy_port() );
-
-    Gtk::SpinButton * xms_opt;
-    builder->get_widget( "XmsOpt" , xms_opt );
-    xms_opt->set_value( config.get_jvm_xms() );
-
-    Gtk::SpinButton * xmx_opt;
-    builder->get_widget( "XmxOpt" , xmx_opt );
-    xmx_opt->set_value( config.get_jvm_xmx() );
-
-    Gtk::FileChooserButton * release_path;
-    builder->get_widget( "ReleaseMagePath" , release_path );
-    release_path->set_filename( config.get_release_path() );
-
-    Gtk::FileChooserButton * beta_path;
-    builder->get_widget( "BetaMagePath" , beta_path );
-    beta_path->set_filename( config.get_beta_path() );
-}
+    Gtk::FileChooserDialog chooserdialog;
+};
 
 XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::Builder>& builder ):
     Gtk::Window( cobject ),
@@ -161,22 +178,38 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     update_process(),
     update_dispatcher()
 {
-    fill_setting_value( this->launcher_builder , this->config );
     if ( this->config.get_using_proxy() )
     {
         set_proxy( config.get_proxy_scheme() , config.get_proxy_host() , config.get_proxy_port() );
     }
 
     //main window button
-    Gtk::Button * client_button;
-    builder->get_widget( "LauncherClient" , client_button );
-    client_button->signal_clicked().connect( sigc::mem_fun( *this , &XmageLauncher::launch_client ) );
-    Gtk::Button * server_button;
-    builder->get_widget( "LauncherServer" , server_button );
-    server_button->signal_clicked().connect( sigc::mem_fun( *this , &XmageLauncher::launch_server ) );
-    Gtk::Button * xmage_button;
-    builder->get_widget( "LauncherXmage" , xmage_button );
-    xmage_button->signal_clicked().connect(
+    this->client_button = builder->get_widget<Gtk::Button>( "LauncherClient" );
+    this->server_button = builder->get_widget<Gtk::Button>( "LauncherServer" );
+    this->xmage_button = builder->get_widget<Gtk::Button>( "LauncherXmage" );
+
+    //advanced setting dialog
+    this->setting_dialog = builder->get_widget<Gtk::Dialog>( "SettingDialog" );
+    this->setting_button = builder->get_widget<Gtk::Button>( "SettingButton" );
+    this->using_mirror_button = builder->get_widget<Gtk::CheckButton>( "UsingMirror" );
+    this->reset_button = builder->get_widget<Gtk::Button>( "ResetConfig" );
+
+    //main window setting
+    this->proxy_type = builder->get_widget<Gtk::ComboBox>( "ProxyType" );
+    this->proxy_host = builder->get_widget<Gtk::Entry>( "ProxyHost" );
+    this->proxy_port = builder->get_widget<Gtk::SpinButton>( "ProxyPort" );
+    this->xms_opt = builder->get_widget<Gtk::SpinButton>( "XmsOpt" );
+    this->xmx_opt = builder->get_widget<Gtk::SpinButton>( "XmxOpt" );
+    this->release_path = Gtk::Builder::get_widget_derived<FileChooserButton>( builder , "ReleaseMagePath" , _("choose release xmage install path") );
+    this->beta_path = Gtk::Builder::get_widget_derived<FileChooserButton>( builder , "BetaMagePath" , _("choose beta xmage install path") );
+    this->active_xmage = builder->get_widget<Gtk::ComboBox>( "UpdateSource" );
+
+    fill_setting_value();
+
+    //main window button
+    this->client_button->signal_clicked().connect( sigc::mem_fun( *this , &XmageLauncher::launch_client ) );
+    this->server_button->signal_clicked().connect( sigc::mem_fun( *this , &XmageLauncher::launch_server ) );
+    this->xmage_button->signal_clicked().connect(
         [ this ]()
         {
             this->launch_client();
@@ -185,42 +218,37 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     );
 
     //advanced setting dialog
-    builder->get_widget( "SettingDialog" , this->setting_dialog );
     this->setting_dialog->add_button( _( "close menu" ) , 0 );
     this->setting_dialog->signal_response().connect( sigc::mem_fun( *this , &XmageLauncher::close_setting ) );
-    Gtk::Button * setting_button;
-    builder->get_widget( "SettingButton" , setting_button );
-    setting_button->signal_clicked().connect( sigc::mem_fun( *this , &XmageLauncher::show_setting ) );
-    Gtk::CheckButton * using_mirror_button;
-    builder->get_widget( "UsingMirror" , using_mirror_button );
-    using_mirror_button->set_active( this->config.get_using_mirror() );
-    using_mirror_button->signal_toggled().connect(
-        [ this , using_mirror_button ]()
-        {
-            this->config.set_using_mirror( using_mirror_button->get_active() );
-        }
-    );
-    Gtk::Button * reset_button;
-    builder->get_widget( "ResetConfig" , reset_button );
-    reset_button->signal_clicked().connect(
+    this->setting_button->signal_clicked().connect( sigc::mem_fun( *this , &XmageLauncher::show_setting ) );
+    this->using_mirror_button->set_active( this->config.get_using_mirror() );
+    this->using_mirror_button->signal_toggled().connect(
         [ this ]()
         {
-            Gtk::MessageDialog confirm( Glib::ustring(_( "do you want reset config?" )) , false , Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO );
-            confirm.set_position( Gtk::WindowPosition::WIN_POS_CENTER_ALWAYS );
-            if ( confirm.run() != Gtk::RESPONSE_YES )
-                return ;
-            this->config.reset_config();
-            fill_setting_value( this->launcher_builder , this->config );
+            this->config.set_using_mirror( this->using_mirror_button->get_active() );
+        }
+    );
+    this->reset_button->signal_clicked().connect(
+        [ this ]()
+        {
+            Gtk::MessageDialog confirm( Glib::ustring(_( "do you want reset config?" )) , false , Gtk::MessageType::ERROR , Gtk::ButtonsType::YES_NO , true );
+            confirm.signal_response().connect([this]( int responseType )
+            {
+                if ( responseType != Gtk::ResponseType::YES )
+                    return ;
+                this->config.reset_config();
+                fill_setting_value();
+            });
+            confirm.show();
+
         }
     );
 
     //main window setting
-    Gtk::ComboBox * proxy_type;
-    builder->get_widget( "ProxyType" , proxy_type );
-    proxy_type->signal_changed().connect(
-        [ this , proxy_type ]()
+    this->proxy_type->signal_changed().connect(
+        [ this ]()
         {
-            Glib::ustring proxy_string = proxy_type->get_active_id();
+            Glib::ustring proxy_string = this->proxy_type->get_active_id();
             Glib::ustring diff_string = proxy_string.lowercase();
             if ( diff_string.compare( "none" ) == 0 )
             {
@@ -237,12 +265,10 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
             }
         }
     );
-    Gtk::Entry * proxy_host;
-    builder->get_widget( "ProxyHost" , proxy_host );
-    proxy_host->signal_changed().connect(
-        [ this , proxy_host ]()
+    this->proxy_host->signal_changed().connect(
+        [ this ]()
         {
-            Glib::ustring host_string = proxy_host->get_text();
+            Glib::ustring host_string = this->proxy_host->get_text();
             this->config.set_proxy_host( host_string );
             if ( this->config.get_using_proxy() )
             {
@@ -250,12 +276,10 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
             }
         }
     );
-    Gtk::SpinButton * proxy_port;
-    builder->get_widget( "ProxyPort" , proxy_port );
-    proxy_port->signal_value_changed().connect(
-        [ this , proxy_port ]()
+    this->proxy_port->signal_value_changed().connect(
+        [ this ]()
         {
-            double port_value = proxy_port->get_value();
+            double port_value = this->proxy_port->get_value();
             this->config.set_proxy_port( port_value );
             if ( this->config.get_using_proxy() )
             {
@@ -263,44 +287,34 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
             }
         }
     );
-    Gtk::SpinButton * xms_opt;
-    builder->get_widget( "XmsOpt" , xms_opt );
-    xms_opt->signal_value_changed().connect(
-        [ this , xms_opt ]()
+    this->xms_opt->signal_value_changed().connect(
+        [ this ]()
         {
-            double xms_value = xms_opt->get_value();
+            double xms_value = this->xms_opt->get_value();
             this->config.set_jvm_xms( xms_value );
         }
     );
-    Gtk::SpinButton * xmx_opt;
-    builder->get_widget( "XmxOpt" , xmx_opt );
-    xmx_opt->signal_value_changed().connect(
-        [ this , xmx_opt ]()
+    this->xmx_opt->signal_value_changed().connect(
+        [ this ]()
         {
-            double xmx_value = xmx_opt->get_value();
+            double xmx_value = this->xmx_opt->get_value();
             this->config.set_jvm_xmx( xmx_value );
         }
     );
-    Gtk::FileChooserButton * release_path;
-    builder->get_widget( "ReleaseMagePath" , release_path );
-    release_path->signal_selection_changed().connect(
-        [ this , release_path ]()
+    release_path->signal_clicked().connect(
+        [ this ]()
         {
             Glib::ustring new_release_path = release_path->get_filename();
             this->config.set_release_path( new_release_path );
         }
     );
-    Gtk::FileChooserButton * beta_path;
-    builder->get_widget( "BetaMagePath" , beta_path );
-    beta_path->signal_selection_changed().connect(
-        [ this , beta_path ]()
+    beta_path->signal_clicked().connect(
+        [ this ]()
         {
             Glib::ustring new_beta_path = beta_path->get_filename();
             this->config.set_beta_path( new_beta_path );
         }
     );
-    Gtk::ComboBox * active_xmage;
-    builder->get_widget( "UpdateSource" , active_xmage );
     Gtk::TreeModelColumnRecord type_colrec;
     Gtk::TreeModelColumn<std::uint32_t> index_col;
     Gtk::TreeModelColumn<Glib::ustring> type_col;
@@ -313,23 +327,20 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
         row[index_col] = i;
         row[type_col] = xmagetype_to_string( static_cast<XmageType>(i) );
     }
-    active_xmage->set_model(typemodel);
-    active_xmage->pack_start( type_col );
-    active_xmage->property_active().set_value( static_cast<int>(config.get_active_xmage()) );
-    active_xmage->signal_changed().connect(
-        [ this , active_xmage ]()
+    this->active_xmage->set_model(typemodel);
+    this->active_xmage->pack_start( type_col );
+    this->active_xmage->property_active().set_value( static_cast<int>(config.get_active_xmage()) );
+    this->active_xmage->signal_changed().connect(
+        [ this ]()
         {
-            int source = active_xmage->property_active();
+            int source = this->active_xmage->property_active();
             this->config.set_active_xmage( static_cast<XmageType>(source) );
             this->do_update();
         }
     );
 
-    this->show_all();
-
     update_dispatcher.connect( sigc::mem_fun( *this , &XmageLauncher::update_widgets ) );
 }
-
 
 XmageLauncher::~XmageLauncher()
 {
@@ -346,9 +357,8 @@ void XmageLauncher::launch_client( void )
     const Glib::ustring javaw_path = this->config.get_javaw_path();
     if (javaw_path.empty())
     {
-        Gtk::MessageDialog confirm( Glib::ustring(_( "java runtime environment not found(need jre8 or jdk8)" )) , false , Gtk::MESSAGE_ERROR , Gtk::BUTTONS_OK , true );
-        confirm.set_position( Gtk::WindowPosition::WIN_POS_CENTER_ALWAYS );
-        confirm.run();
+        Gtk::MessageDialog confirm( Glib::ustring(_( "java runtime environment not found(need jre8 or jdk8)" )) , false , Gtk::MessageType::ERROR , Gtk::ButtonsType::OK , true );
+        confirm.show();
         return ;
     }
 
@@ -357,14 +367,14 @@ void XmageLauncher::launch_client( void )
     Glib::ustring xms_opt = Glib::ustring::compose( "-Xms%1m" , this->config.get_jvm_xms() );
     Glib::ustring xmx_opt = Glib::ustring::compose( "-Xmx%1m" , this->config.get_jvm_xmx() );
     Glib::ustring jar_path = Glib::ustring::compose( "./lib/mage-client-%1.jar" , this->config.get_active_xmage_version() );
-    std::vector<Glib::ustring> argvs({
+    std::vector<std::string> argvs({
         javaw_path , xms_opt , xmx_opt , 
         "-XX:MaxPermSize=384m" , "-XX:+UseConcMarkSweepGC" , "-Dfile.encoding=UTF-8",
         "-XX:+CMSClassUnloadingEnabled" , "-jar" , jar_path
     });
     Glib::ustring client_path = this->config.get_active_xmage_client();
 
-    Glib::spawn_async_with_pipes( client_path , argvs );
+    Glib::spawn_async_with_pipes( client_path.raw() , argvs );
 }
 
 void XmageLauncher::launch_server( void )
@@ -372,9 +382,8 @@ void XmageLauncher::launch_server( void )
     const Glib::ustring java_path = this->config.get_java_path();
     if (java_path.empty())
     {
-        Gtk::MessageDialog confirm( Glib::ustring(_( "java runtime environment not found(need jre8 or jdk8)" )) , false , Gtk::MESSAGE_ERROR , Gtk::BUTTONS_OK , true );
-        confirm.set_position( Gtk::WindowPosition::WIN_POS_CENTER_ALWAYS );
-        confirm.run();
+        Gtk::MessageDialog confirm( Glib::ustring(_( "java runtime environment not found(need jre8 or jdk8)" )) , false , Gtk::MessageType::ERROR , Gtk::ButtonsType::OK , true );
+        confirm.show();
         return ;
     }
 
@@ -383,19 +392,19 @@ void XmageLauncher::launch_server( void )
     Glib::ustring xms_opt = Glib::ustring::compose( "-Xms%1m" , this->config.get_jvm_xms() );
     Glib::ustring xmx_opt = Glib::ustring::compose( "-Xmx%1m" , this->config.get_jvm_xmx() );
     Glib::ustring jar_path = Glib::ustring::compose( "./lib/mage-server-%1.jar" , this->config.get_active_xmage_version() );
-    std::vector<Glib::ustring> argvs({
+    std::vector<std::string> argvs({
         java_path , xms_opt , xmx_opt ,"-XX:MaxPermSize=384m" , "-Djava.security.policy=./config/security.policy", "-Dfile.encoding=UTF-8",
         "-Djava.util.logging.config.file=./config/logging.config" , "-Dlog4j.configuration=file:./config/log4j.properties"
         , "-jar" , jar_path
     });
     Glib::ustring server_path = this->config.get_active_xmage_serve();
 
-    Glib::spawn_async_with_pipes( server_path , argvs );
+    Glib::spawn_async_with_pipes( server_path.raw() , argvs );
 }
 
 void XmageLauncher::show_setting( void )
 {
-    setting_dialog->show_all();
+    setting_dialog->show();
 }
 
 void XmageLauncher::close_setting( int )
@@ -405,28 +414,16 @@ void XmageLauncher::close_setting( int )
 
 void XmageLauncher::disable_launch( void )
 {
-    Gtk::Button * client_button;
-    this->launcher_builder->get_widget( "LauncherClient" , client_button );
-    client_button->set_sensitive( false );
-    Gtk::Button * server_button;
-    this->launcher_builder->get_widget( "LauncherServer" , server_button );
-    server_button->set_sensitive( false );
-    Gtk::Button * xmage_button;
-    this->launcher_builder->get_widget( "LauncherXmage" , xmage_button );
-    xmage_button->set_sensitive( false );
+    this->client_button->set_sensitive( false );
+    this->server_button->set_sensitive( false );
+    this->xmage_button->set_sensitive( false );
 }
 
 void XmageLauncher::enable_launch( void )
 {
-    Gtk::Button * client_button;
-    this->launcher_builder->get_widget( "LauncherClient" , client_button );
-    client_button->set_sensitive( true );
-    Gtk::Button * server_button;
-    this->launcher_builder->get_widget( "LauncherServer" , server_button );
-    server_button->set_sensitive( true );
-    Gtk::Button * xmage_button;
-    this->launcher_builder->get_widget( "LauncherXmage" , xmage_button );
-    xmage_button->set_sensitive( true );
+    this->client_button->set_sensitive( true );
+    this->server_button->set_sensitive( true );
+    this->xmage_button->set_sensitive( true );
 }
 
 void XmageLauncher::do_update( void )
@@ -452,8 +449,7 @@ void XmageLauncher::update_widgets( void )
     std::int64_t now = 0 , total = 0;
     Glib::ustring info;
 
-    LauncherProgressBar * update_progress_bar = nullptr;
-    this->launcher_builder->get_widget_derived( "ProgressBar" , update_progress_bar );
+    LauncherProgressBar * update_progress_bar = Gtk::Builder::get_widget_derived<LauncherProgressBar>( launcher_builder , "ProgressBar" );
     
     this->update.get_data( update_end , now , total , info );
     if ( update_end )
@@ -470,4 +466,24 @@ void XmageLauncher::update_widgets( void )
     update_progress_bar->set_progress_value( total ? now/static_cast<gdouble>( total ) : 0 );
 
     this->queue_draw();
+}
+
+void XmageLauncher::fill_setting_value( void )
+{
+    if ( this->config.get_using_proxy() )
+    {
+        this->proxy_type->set_active_id( this->config.get_proxy_scheme() );
+    }
+    else
+    {
+        this->proxy_type->set_active_id( "None" );
+    }
+
+    this->proxy_host->set_text( this->config.get_proxy_host() );
+
+    this->proxy_port->set_value( this->config.get_proxy_port() );
+    this->xms_opt->set_value( this->config.get_jvm_xms() );
+    this->xmx_opt->set_value( this->config.get_jvm_xmx() );
+    this->release_path->set_filename( this->config.get_release_path() );
+    this->beta_path->set_filename( this->config.get_beta_path() );
 }

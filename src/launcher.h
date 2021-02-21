@@ -4,13 +4,21 @@
 
 #include <thread>
 
-#include <glibmm.h>
-#include <gtkmm/builder.h>
+#include <glibmm/dispatcher.h>
+#include <glibmm/refptr.h>
+#include <gtkmm/button.h>
+#include <gtkmm/checkbutton.h>
+#include <gtkmm/combobox.h>
 #include <gtkmm/dialog.h>
+#include <gtkmm/builder.h>
+#include <gtkmm/entry.h>
+#include <gtkmm/spinbutton.h>
 #include <gtkmm/window.h>
 
 #include "launcherconfig.h"
 #include "updatework.h"
+
+class FileChooserButton;
 
 class XmageLauncher : public Gtk::Window
 {
@@ -30,11 +38,28 @@ public:
     void close_setting( int );
     void do_update( void );
     void update_widgets( void );
+    void fill_setting_value( void );
 
 private:
     //keep ref to launcher deconstructor
     Glib::RefPtr<Gtk::Builder> launcher_builder;
-    Gtk::Dialog * setting_dialog;
+
+    Gtk::CheckButton * using_mirror_button;
+    Gtk::ComboBox * active_xmage;
+    Gtk::ComboBox * proxy_type;
+    Gtk::Button * client_button;
+    Gtk::Button * server_button;
+    Gtk::Button * xmage_button;
+    Gtk::Button * setting_button;
+    Gtk::Button * reset_button;
+    Gtk::SpinButton * proxy_port;
+    Gtk::SpinButton * xms_opt;
+    Gtk::SpinButton * xmx_opt;
+    Gtk::Entry * proxy_host;
+    Gtk::Dialog * setting_dialog;    
+    FileChooserButton * beta_path;
+    FileChooserButton * release_path;
+
     config_t& config;
 
     std::thread update_process;

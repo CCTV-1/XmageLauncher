@@ -2,6 +2,9 @@
 
 #include <functional>
 
+#include <glibmm/fileutils.h>
+#include <glibmm/miscutils.h>
+
 //config.ini content like:
 //[Beta]
 //version=1.4.35.dev_2019-04-28_20-43
@@ -24,10 +27,10 @@ constexpr const char * CONFIG_FILE_NAME = "config.conf";
 
 LauncherConfig::LauncherConfig()
 {
-    this->config_file = Glib::KeyFile();
+    this->config_file = Glib::KeyFile::create();
     try
     {
-        this->config_file.load_from_file( CONFIG_FILE_NAME , Glib::KeyFileFlags::KEY_FILE_KEEP_COMMENTS | Glib::KeyFileFlags::KEY_FILE_KEEP_TRANSLATIONS );
+        this->config_file->load_from_file( CONFIG_FILE_NAME , Glib::KeyFile::Flags::KEEP_COMMENTS | Glib::KeyFile::Flags::KEEP_TRANSLATIONS );
     }
     //access file error or file parse error,getter function set config to default value,constructor only output log.
     catch( const Glib::FileError& e )
@@ -42,7 +45,7 @@ LauncherConfig::LauncherConfig()
 
 LauncherConfig::~LauncherConfig()
 {
-    this->config_file.save_to_file( CONFIG_FILE_NAME );
+    this->config_file->save_to_file( CONFIG_FILE_NAME );
 }
 
 Glib::ustring LauncherConfig::get_java_path( void )
@@ -64,12 +67,12 @@ Glib::ustring LauncherConfig::get_beta_version( void )
     Glib::ustring version;
     try
     {
-        version = this->config_file.get_string( "Beta" , "version" );
+        version = this->config_file->get_string( "Beta" , "version" );
     }
     catch ( const Glib::KeyFileError& e )
     {
         version = "1.4.35.dev_2019-04-28_20-43";
-        this->config_file.set_string( "Beta" , "version" , version );
+        this->config_file->set_string( "Beta" , "version" , version );
     }
 
     return version;
@@ -79,12 +82,12 @@ Glib::ustring LauncherConfig::get_beta_path( void )
     Glib::ustring path;
     try
     {
-        path = this->config_file.get_string( "Beta" , "installed_path" );
+        path = this->config_file->get_string( "Beta" , "installed_path" );
     }
     catch ( const Glib::KeyFileError& e )
     {
         path = "Xmage-Beta";
-        this->config_file.set_string( "Beta" , "installed_path" , path );
+        this->config_file->set_string( "Beta" , "installed_path" , path );
     }
 
     return path;
@@ -94,12 +97,12 @@ Glib::ustring LauncherConfig::get_release_version( void )
     Glib::ustring version;
     try
     {
-        version = this->config_file.get_string( "Release" , "version" );
+        version = this->config_file->get_string( "Release" , "version" );
     }
     catch ( const Glib::KeyFileError& e )
     {
         version = "1.4.35V2";
-        this->config_file.set_string( "Release" , "version" , version );
+        this->config_file->set_string( "Release" , "version" , version );
     }
 
     return version;
@@ -109,12 +112,12 @@ Glib::ustring LauncherConfig::get_release_path( void )
     Glib::ustring path;
     try
     {
-        path = this->config_file.get_string( "Release" , "installed_path" );
+        path = this->config_file->get_string( "Release" , "installed_path" );
     }
     catch ( const Glib::KeyFileError& e )
     {
         path = "Xmage-Release";
-        this->config_file.set_string( "Release" , "installed_path" , path );
+        this->config_file->set_string( "Release" , "installed_path" , path );
     }
 
     return path;
@@ -124,12 +127,12 @@ bool LauncherConfig::get_using_proxy( void )
     bool is_enable;
     try
     {
-        is_enable = this->config_file.get_boolean( "Setting" , "using_proxy" );
+        is_enable = this->config_file->get_boolean( "Setting" , "using_proxy" );
     }
     catch ( const Glib::KeyFileError& e )
     {
         is_enable = false;
-        this->config_file.set_boolean( "Setting" , "using_proxy" , is_enable );
+        this->config_file->set_boolean( "Setting" , "using_proxy" , is_enable );
     }
 
     return is_enable;
@@ -139,12 +142,12 @@ bool LauncherConfig::get_using_mirror( void )
     bool is_enable;
     try
     {
-        is_enable = this->config_file.get_boolean( "Setting" , "using_mirror" );
+        is_enable = this->config_file->get_boolean( "Setting" , "using_mirror" );
     }
     catch ( const Glib::KeyFileError& e )
     {
         is_enable = false;
-        this->config_file.set_boolean( "Setting" , "using_mirror" , is_enable );
+        this->config_file->set_boolean( "Setting" , "using_mirror" , is_enable );
     }
 
     return is_enable;
@@ -154,12 +157,12 @@ Glib::ustring LauncherConfig::get_proxy_scheme( void )
     Glib::ustring scheme;
     try
     {
-        scheme = this->config_file.get_string( "Setting" , "proxy_scheme" );
+        scheme = this->config_file->get_string( "Setting" , "proxy_scheme" );
     }
     catch ( const Glib::KeyFileError& e )
     {
         scheme = "HTTP";
-        this->config_file.set_string( "Setting" , "proxy_scheme" , scheme );
+        this->config_file->set_string( "Setting" , "proxy_scheme" , scheme );
     }
 
     return scheme;
@@ -169,12 +172,12 @@ Glib::ustring LauncherConfig::get_proxy_host( void )
     Glib::ustring host;
     try
     {
-        host = this->config_file.get_string( "Setting" , "proxy_host" );
+        host = this->config_file->get_string( "Setting" , "proxy_host" );
     }
     catch ( const Glib::KeyFileError& e )
     {
         host = "localhost";
-        this->config_file.set_string( "Setting" , "proxy_host" , host );
+        this->config_file->set_string( "Setting" , "proxy_host" , host );
     }
 
     return host;
@@ -184,12 +187,12 @@ std::uint32_t LauncherConfig::get_proxy_port( void )
     std::uint32_t port;
     try
     {
-        port = this->config_file.get_integer( "Setting" , "proxy_port" );
+        port = this->config_file->get_integer( "Setting" , "proxy_port" );
     }
     catch ( const Glib::KeyFileError& e )
     {
         port = 1080;
-        this->config_file.set_integer( "Setting" , "proxy_port" , port );
+        this->config_file->set_integer( "Setting" , "proxy_port" , port );
     }
 
     return port;
@@ -199,12 +202,12 @@ std::uint32_t LauncherConfig::get_jvm_xms( void )
     std::uint32_t xms;
     try
     {
-        xms = this->config_file.get_integer( "Setting" , "jvm_xms" );
+        xms = this->config_file->get_integer( "Setting" , "jvm_xms" );
     }
     catch ( const Glib::KeyFileError& e )
     {
         xms = 256;
-        this->config_file.set_integer( "Setting" , "jvm_xms" , xms );
+        this->config_file->set_integer( "Setting" , "jvm_xms" , xms );
     }
 
     return xms;
@@ -214,12 +217,12 @@ std::uint32_t LauncherConfig::get_jvm_xmx( void )
     std::uint32_t xmx;
     try
     {
-        xmx = this->config_file.get_integer( "Setting" , "jvm_xmx" );
+        xmx = this->config_file->get_integer( "Setting" , "jvm_xmx" );
     }
     catch ( const Glib::KeyFileError& e )
     {
         xmx = 1024;
-        this->config_file.set_integer( "Setting" , "jvm_xmx" , xmx );
+        this->config_file->set_integer( "Setting" , "jvm_xmx" , xmx );
     }
 
     return xmx;
@@ -229,12 +232,12 @@ XmageType LauncherConfig::get_active_xmage( void )
     XmageType active_type;
     try
     {
-        active_type = static_cast<XmageType>( this->config_file.get_integer( "Setting" , "active_xmage" ) );
+        active_type = static_cast<XmageType>( this->config_file->get_integer( "Setting" , "active_xmage" ) );
     }
     catch ( const Glib::KeyFileError& e )
     {
         active_type = XmageType::Release;
-        this->config_file.set_integer( "Setting" , "active_xmage" , static_cast<int>( XmageType::Release ) );
+        this->config_file->set_integer( "Setting" , "active_xmage" , static_cast<int>( XmageType::Release ) );
     }
 
     return active_type;
@@ -379,62 +382,62 @@ Glib::ustring LauncherConfig::get_active_xmage_path( void )
 
 LauncherConfig& LauncherConfig::set_beta_version( const Glib::ustring& beta_version )
 {
-    this->config_file.set_string( "Beta" , "version" , beta_version );
+    this->config_file->set_string( "Beta" , "version" , beta_version );
     return *this;
 }
 LauncherConfig& LauncherConfig::set_beta_path( const Glib::ustring& beta_path )
 {
-    this->config_file.set_string( "Beta" , "installed_path" , beta_path );
+    this->config_file->set_string( "Beta" , "installed_path" , beta_path );
     return *this;
 }
 LauncherConfig& LauncherConfig::set_release_version( const Glib::ustring& release_version )
 {
-    this->config_file.set_string( "Release" , "version" , release_version );
+    this->config_file->set_string( "Release" , "version" , release_version );
     return *this;
 }
 LauncherConfig& LauncherConfig::set_release_path( const Glib::ustring& release_path )
 {
-    this->config_file.set_string( "Release" , "installed_path" , release_path );
+    this->config_file->set_string( "Release" , "installed_path" , release_path );
     return *this;
 }
 LauncherConfig& LauncherConfig::set_using_proxy( const bool& using_proxy )
 {
-    this->config_file.set_boolean( "Setting" , "using_proxy" , using_proxy );
+    this->config_file->set_boolean( "Setting" , "using_proxy" , using_proxy );
     return *this;
 }
 LauncherConfig& LauncherConfig::set_using_mirror( const bool& using_mirror )
 {
-    this->config_file.set_boolean( "Setting" , "using_mirror" , using_mirror );
+    this->config_file->set_boolean( "Setting" , "using_mirror" , using_mirror );
     return *this;
 }
 LauncherConfig& LauncherConfig::set_proxy_scheme( const Glib::ustring& proxy_scheme )
 {
-    this->config_file.set_string( "Setting" , "proxy_scheme" , proxy_scheme );
+    this->config_file->set_string( "Setting" , "proxy_scheme" , proxy_scheme );
     return *this;
 }
 LauncherConfig& LauncherConfig::set_proxy_host( const Glib::ustring& proxy_host )
 {
-    this->config_file.set_string( "Setting" , "proxy_host" , proxy_host );
+    this->config_file->set_string( "Setting" , "proxy_host" , proxy_host );
     return *this;
 }
 LauncherConfig& LauncherConfig::set_proxy_port( const std::uint32_t& proxy_port )
 {
-    this->config_file.set_integer( "Setting" , "proxy_port" , proxy_port );
+    this->config_file->set_integer( "Setting" , "proxy_port" , proxy_port );
     return *this;
 }
 LauncherConfig& LauncherConfig::set_jvm_xms( const std::uint32_t& jvm_xms )
 {
-    this->config_file.set_integer( "Setting" , "jvm_xms" , jvm_xms );
+    this->config_file->set_integer( "Setting" , "jvm_xms" , jvm_xms );
     return *this;
 }
 LauncherConfig& LauncherConfig::set_jvm_xmx( const std::uint32_t& jvm_xmx )
 {
-    this->config_file.set_integer( "Setting" , "jvm_xmx" , jvm_xmx );
+    this->config_file->set_integer( "Setting" , "jvm_xmx" , jvm_xmx );
     return *this;
 }
 LauncherConfig& LauncherConfig::set_active_xmage( const XmageType& type )
 {
-    this->config_file.set_integer( "Setting" , "active_xmage" , static_cast<int>( type ) );
+    this->config_file->set_integer( "Setting" , "active_xmage" , static_cast<int>( type ) );
     return *this;
 }
 
@@ -446,5 +449,5 @@ LauncherConfig& LauncherConfig::get_config( void )
 
 void LauncherConfig::reset_config( void )
 {
-    this->config_file = Glib::KeyFile();
+    this->config_file = Glib::KeyFile::create();
 }

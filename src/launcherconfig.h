@@ -2,7 +2,11 @@
 #ifndef LAUNCHERCONFIG_H
 #define LAUNCHERCONFIG_H
 
-#include <glibmm.h>
+#include <cstdint>
+
+#include <glibmm/keyfile.h>
+#include <glibmm/refptr.h>
+#include <glibmm/ustring.h>
 
 #include "updatework.h"
 
@@ -62,7 +66,7 @@ public:
 private:
     LauncherConfig();
 
-    Glib::KeyFile config_file;
+    Glib::RefPtr<Glib::KeyFile> config_file;
 }config_t;
 
 #endif

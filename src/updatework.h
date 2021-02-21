@@ -7,8 +7,11 @@
 #include <thread>
 #include <future>
 
+#include <glibmm/dispatcher.h>
+#include <glibmm/ustring.h>
+
+//in msys2-mingw64,curl include ERROR macro(in wingdi.h),glibmm-2.68/iochannel.h have a enum class IOStatus::ERROR,so include curl after glibmm.
 #include <curl/curl.h>
-#include <glibmm.h>
 
 typedef struct VersionDescription
 {
