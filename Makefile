@@ -3,8 +3,8 @@ FLAGS=-Wall -Wextra -Wpedantic -std=gnu++17 -m64
 GLIB_COMPILE_RESOURCES=glib-compile-resources
 LIBZIP_FLAGS=$(shell pkg-config --cflags --libs libzip)
 CURL_FLAGS=$(shell pkg-config --cflags --libs libcurl)
-GTKMM_FLAGS=$(shell pkg-config --cflags --libs gtkmm-3.0)
-GLIBMM_FLAGS=$(shell pkg-config --cflags --libs glibmm-2.4)
+GTKMM_FLAGS=$(shell pkg-config --cflags --libs gtkmm-4.0)
+GLIBMM_FLAGS=$(shell pkg-config --cflags --libs glibmm-2.68)
 GLIBJSON_INCLUDE=$(shell pkg-config --cflags json-glib-1.0)
 GLIBJSON_LIBS=$(shell pkg-config --cflags --libs json-glib-1.0)
 OS= $(shell uname -o)
