@@ -60,15 +60,18 @@ public:
         if ( value < 0.0 )
         {
             this->prog_value = 0.0;
+            this->queue_draw();
             return ;
         }
         if ( value >= 1.0 )
         {
             this->prog_value = 1.0;
+            this->queue_draw();
             return ;
         }
 
         this->prog_value = value;
+        this->queue_draw();
     }
 
     const double& get_progress_value( void ) const
@@ -79,6 +82,7 @@ public:
     void set_progress_info( Glib::ustring info )
     {
         this->prog_info = std::move( info );
+        this->queue_draw();
     }
 
     const Glib::ustring& get_progress_info( void ) const
