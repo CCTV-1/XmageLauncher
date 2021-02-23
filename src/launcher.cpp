@@ -91,6 +91,23 @@ public:
     }
 
 protected:
+    void measure_vfunc( Gtk::Orientation orientation , int , int& minimum , int& natural ,
+        int& minimum_baseline , int& natural_baseline ) const override
+    {
+        if ( orientation == Gtk::Orientation::HORIZONTAL )
+        {
+            minimum = 30;
+            natural = 35;
+        }
+        else
+        {
+            minimum = 20;
+            natural = 25;
+        }
+        minimum_baseline = -1;
+        natural_baseline = -1;
+    }
+
     void on_draw( const Cairo::RefPtr<Cairo::Context>& cairo_context , int , int )
     {
         const Gtk::Allocation allocation = get_allocation();
