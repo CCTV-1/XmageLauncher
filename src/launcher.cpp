@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #include <gtkmm/drawingArea.h>
-#include <gtkmm/filechooserdialog.h>
+#include <gtkmm/filechoosernative.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/messagedialog.h>
 #include <glibmm/i18n.h>
@@ -145,32 +145,34 @@ private:
     Glib::RefPtr<Pango::Layout> layout;
 };
 
-class FileChooserButton : public Gtk::Button
+class FolderChooserButton : public Gtk::Button
 {
 public:
-    FileChooserButton( BaseObjectType* cobject , const Glib::RefPtr<Gtk::Builder>& , Glib::ustring chooser_behaviour
-        , Glib::ustring default_filename = "" ):
+    using selected_signal_t = sigc::signal<void(Glib::ustring)>;
+
+    FolderChooserButton( BaseObjectType* cobject , const Glib::RefPtr<Gtk::Builder>& , Gtk::Window& parent_windw,
+        Glib::ustring title , Glib::ustring default_filename = "" ):
         Gtk::Button( cobject ),
-        chooser_target(chooser_behaviour),
-        filename(default_filename),
-        chooserdialog(chooser_target)
+        filename(default_filename)
     {
+        this->set_label(this->filename);
+        this->set_expand();
         this->signal_clicked().connect(
             [ this ]()
             {
-                this->chooserdialog.show();
+                this->chooserdialog->show();
             }
         );
 
-        this->chooserdialog.signal_response().connect(
+        this->chooserdialog = Gtk::FileChooserNative::create( title , parent_windw , Gtk::FileChooser::Action::SELECT_FOLDER );
+        this->chooserdialog->signal_response().connect(
             [ this ](int response_id)
             {
-                this->chooserdialog.hide();
-                if (response_id == Gtk::ResponseType::OK)
+                if (response_id == Gtk::ResponseType::ACCEPT)
                 {
-                    this->filename = this->chooserdialog.get_file()->get_path();
-                    this->set_label(this->filename);
+                    this->set_filename( this->chooserdialog->get_file()->get_path() );
                 }
+                this->chooserdialog->hide();
             }
         );
     }
@@ -179,17 +181,24 @@ public:
     {
         this->filename = name;
         this->set_label(this->filename);
+        this->selected_signal.emit( this->filename );
     }
 
     const Glib::ustring& get_filename() const
     {
         return this->filename;
     }
+
+    selected_signal_t signal_selected()
+    {
+        return this->selected_signal;
+    }
+
 private:
-    Glib::ustring chooser_target;
     Glib::ustring filename;
 
-    Gtk::FileChooserDialog chooserdialog;
+    selected_signal_t selected_signal;
+    Glib::RefPtr<Gtk::FileChooserNative> chooserdialog;
 };
 
 XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::Builder>& builder ):
@@ -221,8 +230,8 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
     this->proxy_port = builder->get_widget<Gtk::SpinButton>( "ProxyPort" );
     this->xms_opt = builder->get_widget<Gtk::SpinButton>( "XmsOpt" );
     this->xmx_opt = builder->get_widget<Gtk::SpinButton>( "XmxOpt" );
-    this->release_path = Gtk::Builder::get_widget_derived<FileChooserButton>( builder , "ReleaseMagePath" , _("choose release xmage install path") );
-    this->beta_path = Gtk::Builder::get_widget_derived<FileChooserButton>( builder , "BetaMagePath" , _("choose beta xmage install path") );
+    this->release_path = Gtk::Builder::get_widget_derived<FolderChooserButton>( builder , "ReleaseMagePath" , *this ,  _("choose release xmage install path") );
+    this->beta_path = Gtk::Builder::get_widget_derived<FolderChooserButton>( builder , "BetaMagePath" , *this , _("choose beta xmage install path") );
     this->active_xmage = builder->get_widget<Gtk::ComboBox>( "UpdateSource" );
 
     fill_setting_value();
@@ -322,18 +331,16 @@ XmageLauncher::XmageLauncher( BaseObjectType* cobject , const Glib::RefPtr<Gtk::
             this->config.set_jvm_xmx( xmx_value );
         }
     );
-    release_path->signal_clicked().connect(
-        [ this ]()
+    release_path->signal_selected().connect(
+        [ this ]( Glib::ustring path )
         {
-            Glib::ustring new_release_path = release_path->get_filename();
-            this->config.set_release_path( new_release_path );
+            this->config.set_release_path( path );
         }
     );
-    beta_path->signal_clicked().connect(
-        [ this ]()
+    beta_path->signal_selected().connect(
+        [ this ]( Glib::ustring path )
         {
-            Glib::ustring new_beta_path = beta_path->get_filename();
-            this->config.set_beta_path( new_beta_path );
+            this->config.set_beta_path( path );
         }
     );
     Gtk::TreeModelColumnRecord type_colrec;

@@ -18,7 +18,7 @@
 #include "launcherconfig.h"
 #include "updatework.h"
 
-class FileChooserButton;
+class FolderChooserButton;
 
 class XmageLauncher : public Gtk::Window
 {
@@ -57,8 +57,8 @@ private:
     Gtk::SpinButton * xmx_opt;
     Gtk::Entry * proxy_host;
     Gtk::Dialog * setting_dialog;    
-    FileChooserButton * beta_path;
-    FileChooserButton * release_path;
+    FolderChooserButton * beta_path;
+    FolderChooserButton * release_path;
 
     config_t& config;
 
