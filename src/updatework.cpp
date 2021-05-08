@@ -606,10 +606,10 @@ static std::shared_future<xmage_desc_t> get_last_version( XmageType type )
         //        "location": "http://xmage.today/java/jre-8u201-"
         //    },
         //    "XMage": {
-        //        "version": "1.4.35.dev_2019-04-24_20-55",
-        //        "location": "http://xmage.today/files/mage-update_1.4.35.dev_2019-04-24_20-55.zip",
+        //        "version": "1.4.48-dev (2021-05-05 14-05)",
+        //        "location": "http://beta.xmage.today/files/mage-update_1.4.48-dev_2021-05-05_14-05.zip",
         //        "locations": [],
-        //        "full": "http://xmage.today/files/mage-full_1.4.35.dev_2019-04-24_20-55.zip",
+        //        "full": "http://beta.xmage.today/files/mage-full_1.4.48-dev_2021-05-05_14-05.zip",
         //        "torrent": "",
         //        "images": "",
         //        "Launcher": {

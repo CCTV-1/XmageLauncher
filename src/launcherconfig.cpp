@@ -283,13 +283,13 @@ Glib::ustring LauncherConfig::get_release_mage_version( void )
 }
 Glib::ustring LauncherConfig::get_beta_mage_version( void )
 {
-    //1.4.35.dev_2019-04-28_20-43 to 1.4.35
+    //1.4.48-dev (2021-05-05 14-05) to 1.4.48
     Glib::ustring mage_version;
     Glib::ustring beta_version = this->get_beta_version();
 
-    std::size_t index = beta_version.find( ".dev" );
+    std::size_t index = beta_version.find( "-dev" );
 
-    //if Glib::ustring::nops return "1.4.35.dev_2019-04-28_20-43"
+    //if Glib::ustring::nops return "1.4.48-dev (2021-05-05 14-05)"
     return beta_version.substr( 0 , index );
 }
 Glib::ustring LauncherConfig::get_active_xmage_version( void )
