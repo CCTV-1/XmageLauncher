@@ -618,7 +618,7 @@ static std::shared_future<xmage_desc_t> get_last_version( XmageType type )
         //        }
         //    }
         //}
-        get_version_func = std::bind( get_update_desc , "http://xmage.today/config.json" , "$.XMage.full" , "$.XMage.version" , nullptr );
+        get_version_func = std::bind( get_update_desc , "http://xmage.today//config.json" , "$.XMage.full" , "$.XMage.version" , nullptr );
     }
 
     std::packaged_task<xmage_desc_t()> task( get_version_func );
