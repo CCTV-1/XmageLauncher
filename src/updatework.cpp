@@ -750,71 +750,67 @@ void UpdateWork::do_update( Glib::Dispatcher& dispatcher )
     }
 
     g_log( __func__ , G_LOG_LEVEL_MESSAGE , _( "last xmage version:'%s',download url:'%s'." ) , update_desc.version_name.c_str() , update_desc.download_url.c_str() );
-    if ( update_desc.version_name.compare( version ) > 0 )
-    {
-        g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , _( "exist new xmage,now download." ) );
-    }
-    else
-    {
-        {
-            std::lock_guard<std::mutex> lock( this->update_mutex );
-            this->prog_info = _( "no need to update" );
-        }
-        return ;
-    }
 
-    std::shared_future<bool> download_future;
-    //if exists
     auto install_package = Gio::File::create_for_path( get_installation_package_name( update_desc ) );
+    //if don't exist install package,download it.if exist,always try to install it.
     if ( install_package->query_exists() == false )
     {
-        download_future = download_update( update_desc , &progress );
-        {
-            std::lock_guard<std::mutex> lock( this->update_mutex );
-            this->prog_info = _( "download update" );
-        }
-        dispatcher.emit();
-        while ( download_future.wait_for( std::chrono::microseconds( 200 ) ) != std::future_status::ready )
-        {
-            bool do_return = false;
-            {
-                std::lock_guard<std::mutex> lock( this->update_mutex );
-                do_return = !( this->updating );
-            }
-            if ( do_return )
-            {
-                //wait download thread exit
-                download_future.wait();
-                return ;
-            }
-        }
-
-        if ( download_future.get() )
+        if ( update_desc.version_name.compare( version ) == 0 )
         {
             {
                 std::lock_guard<std::mutex> lock( this->update_mutex );
-                this->prog_now = 0;
-                this->prog_total = 0;
-                this->prog_info = _( "download success" );
-            }
-            dispatcher.emit();
-            auto download_temp_file = Gio::File::create_for_path( get_download_temp_name( update_desc ) );
-            download_temp_file->move( install_package );
-        }
-        else
-        {
-            {
-                std::lock_guard<std::mutex> lock( this->update_mutex );
-                this->prog_now = 0;
-                this->prog_total = 0;
-                this->prog_info = _( "download failure" );
+                this->prog_info = _( "no need to update" );
             }
             return ;
         }
-    }
-    else
-    {
-        g_log( __func__ , G_LOG_LEVEL_MESSAGE , _( "using local installation package" ) );
+
+        g_log( __func__ , G_LOG_LEVEL_MESSAGE , "%s" , _( "exist new xmage,now download." ) );
+        std::shared_future<bool> download_future;
+        {
+            download_future = download_update( update_desc , &progress );
+            {
+                std::lock_guard<std::mutex> lock( this->update_mutex );
+                this->prog_info = _( "download update" );
+            }
+            dispatcher.emit();
+            while ( download_future.wait_for( std::chrono::microseconds( 200 ) ) != std::future_status::ready )
+            {
+                bool do_return = false;
+                {
+                    std::lock_guard<std::mutex> lock( this->update_mutex );
+                    do_return = !( this->updating );
+                }
+                if ( do_return )
+                {
+                    //wait download thread exit
+                    download_future.wait();
+                    return ;
+                }
+            }
+
+            if ( download_future.get() )
+            {
+                {
+                    std::lock_guard<std::mutex> lock( this->update_mutex );
+                    this->prog_now = 0;
+                    this->prog_total = 0;
+                    this->prog_info = _( "download success" );
+                }
+                dispatcher.emit();
+                auto download_temp_file = Gio::File::create_for_path( get_download_temp_name( update_desc ) );
+                download_temp_file->move( install_package );
+            }
+            else
+            {
+                {
+                    std::lock_guard<std::mutex> lock( this->update_mutex );
+                    this->prog_now = 0;
+                    this->prog_total = 0;
+                    this->prog_info = _( "download failure" );
+                }
+                return ;
+            }
+        }
     }
 
     Glib::ustring install_path;
