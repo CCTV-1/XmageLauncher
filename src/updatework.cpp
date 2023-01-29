@@ -581,7 +581,7 @@ static std::shared_future<xmage_desc_t> get_last_version( XmageType type )
             //    ],
             //    ... unimportant ...
             //}
-            get_version_func = std::bind( get_update_desc , "https://api.github.com/repos/magefree/mage/releases/latest" , "$.assets[0].browser_download_url" , "$.assets[0].name",
+            get_version_func = std::bind( get_update_desc , "https://api.github.com/repos/CCTV-1/mage-i18n/releases/latest" , "$.assets[0].browser_download_url" , "$.assets[0].name",
                 []( xmage_desc_t& raw )
                 {
                     if ( Glib::str_has_prefix( raw.version_name , "xmage_" ) )
